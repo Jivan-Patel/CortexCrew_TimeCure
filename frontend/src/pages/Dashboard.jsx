@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authAPI from '../api/auth';
-import './Dashboard.css';
 
 export const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -39,16 +38,16 @@ export const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-container">
-        <div className="loading">Loading...</div>
+      <div className="min-h-screen bg-[#f5f7fa] font-sans flex items-center justify-center">
+        <div className="text-center py-15 px-5 text-lg">Loading...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="dashboard-container">
-        <div className="error">{error}</div>
+      <div className="min-h-screen bg-[#f5f7fa] font-sans flex items-center justify-center">
+        <div className="text-center py-15 px-5 text-lg text-[#c33]">{error}</div>
       </div>
     );
   }
@@ -57,91 +56,91 @@ export const Dashboard = () => {
   const isDoctor = userRole === 'doctor';
 
   return (
-    <div className="dashboard-container">
-      <nav className="navbar">
-        <div className="navbar-brand">
-          <h1>🏥 TimeCure</h1>
+    <div className="min-h-screen bg-[#f5f7fa] font-sans">
+      <nav className="bg-white shadow-[0_2px_10px_rgba(0,0,0,0.1)] px-5 md:px-10 py-5 flex flex-col md:flex-row justify-between items-center sticky top-0 z-[100] gap-4 md:gap-0">
+        <div>
+          <h1 className="m-0 text-[#333] text-2xl font-bold">🏥 TimeCure</h1>
         </div>
-        <div className="navbar-user">
-          <span className="user-name">{user?.username}</span>
-          <span className={`role-badge ${isDoctor ? 'doctor' : 'patient'}`}>
+        <div className="flex items-center gap-5 w-full md:w-auto justify-between md:justify-end">
+          <span className="font-semibold text-[#333]">{user?.username}</span>
+          <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${isDoctor ? 'bg-[#e8f5e9] text-[#2e7d32]' : 'bg-[#e3f2fd] text-[#1565c0]'}`}>
             {isDoctor ? '👨‍⚕️ Doctor' : '👤 Patient'}
           </span>
-          <button onClick={handleLogout} className="logout-btn">
+          <button onClick={handleLogout} className="px-4 py-2 bg-[#ff6b6b] text-white border-none rounded-md cursor-pointer font-semibold transition-colors hover:bg-[#ee5a52]">
             Logout
           </button>
         </div>
       </nav>
 
-      <div className="dashboard-content">
-        <div className="welcome-section">
-          <h2>Welcome, {user?.username}! 👋</h2>
-          <p>
+      <div className="p-5 md:p-10 max-w-[1200px] mx-auto">
+        <div className="mb-10">
+          <h2 className="text-[#333] text-2xl md:text-3xl font-bold mb-2.5">Welcome, {user?.username}! 👋</h2>
+          <p className="text-[#666] text-base">
             {isDoctor
               ? 'Welcome to your doctor dashboard'
               : 'Welcome to your patient dashboard'}
           </p>
         </div>
 
-        <div className="dashboard-cards">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {isDoctor ? (
             <>
-              <div className="card">
-                <div className="card-icon">📋</div>
-                <h3>My Appointments</h3>
-                <p>View and manage your appointments</p>
-                <button className="card-btn">View Appointments</button>
+              <div className="bg-white rounded-xl p-7 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer hover:-translate-y-2 hover:shadow-[0_12px_25px_rgba(0,0,0,0.15)] block">
+                <div className="text-5xl mb-4">📋</div>
+                <h3 className="text-[#333] my-4 text-lg font-bold">My Appointments</h3>
+                <p className="text-[#666] text-sm mb-5">View and manage your appointments</p>
+                <button className="w-full p-2.5 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-md cursor-pointer font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(102,126,234,0.3)] block">View Appointments</button>
               </div>
 
-              <div className="card">
-                <div className="card-icon">👥</div>
-                <h3>My Patients</h3>
-                <p>Manage your patient list</p>
-                <button className="card-btn">View Patients</button>
+              <div className="bg-white rounded-xl p-7 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer hover:-translate-y-2 hover:shadow-[0_12px_25px_rgba(0,0,0,0.15)] block">
+                <div className="text-5xl mb-4">👥</div>
+                <h3 className="text-[#333] my-4 text-lg font-bold">My Patients</h3>
+                <p className="text-[#666] text-sm mb-5">Manage your patient list</p>
+                <button className="w-full p-2.5 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-md cursor-pointer font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(102,126,234,0.3)] block">View Patients</button>
               </div>
 
-              <div className="card">
-                <div className="card-icon">📊</div>
-                <h3>Reports</h3>
-                <p>View your activity reports</p>
-                <button className="card-btn">View Reports</button>
+              <div className="bg-white rounded-xl p-7 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer hover:-translate-y-2 hover:shadow-[0_12px_25px_rgba(0,0,0,0.15)] block">
+                <div className="text-5xl mb-4">📊</div>
+                <h3 className="text-[#333] my-4 text-lg font-bold">Reports</h3>
+                <p className="text-[#666] text-sm mb-5">View your activity reports</p>
+                <button className="w-full p-2.5 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-md cursor-pointer font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(102,126,234,0.3)] block">View Reports</button>
               </div>
 
-              <div className="card">
-                <div className="card-icon">⚙️</div>
-                <h3>Profile Settings</h3>
-                <p>Update your profile information</p>
-                <button className="card-btn">Edit Profile</button>
+              <div className="bg-white rounded-xl p-7 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer hover:-translate-y-2 hover:shadow-[0_12px_25px_rgba(0,0,0,0.15)] block">
+                <div className="text-5xl mb-4">⚙️</div>
+                <h3 className="text-[#333] my-4 text-lg font-bold">Profile Settings</h3>
+                <p className="text-[#666] text-sm mb-5">Update your profile information</p>
+                <button className="w-full p-2.5 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-md cursor-pointer font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(102,126,234,0.3)] block">Edit Profile</button>
               </div>
             </>
           ) : (
             <>
-              <div className="card">
-                <div className="card-icon">🏥</div>
-                <h3>Find Doctor</h3>
-                <p>Search and book appointments with doctors</p>
-                <button className="card-btn">Find Doctor</button>
+              <div className="bg-white rounded-xl p-7 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer hover:-translate-y-2 hover:shadow-[0_12px_25px_rgba(0,0,0,0.15)] block">
+                <div className="text-5xl mb-4">🏥</div>
+                <h3 className="text-[#333] my-4 text-lg font-bold">Find Doctor</h3>
+                <p className="text-[#666] text-sm mb-5">Search and book appointments with doctors</p>
+                <button className="w-full p-2.5 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-md cursor-pointer font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(102,126,234,0.3)] block">Find Doctor</button>
               </div>
 
-              <div className="card">
-                <div className="card-icon">📅</div>
-                <h3>My Appointments</h3>
-                <p>View your scheduled appointments</p>
-                <button className="card-btn">View Appointments</button>
+              <div className="bg-white rounded-xl p-7 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer hover:-translate-y-2 hover:shadow-[0_12px_25px_rgba(0,0,0,0.15)] block">
+                <div className="text-5xl mb-4">📅</div>
+                <h3 className="text-[#333] my-4 text-lg font-bold">My Appointments</h3>
+                <p className="text-[#666] text-sm mb-5">View your scheduled appointments</p>
+                <button className="w-full p-2.5 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-md cursor-pointer font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(102,126,234,0.3)] block">View Appointments</button>
               </div>
 
-              <div className="card">
-                <div className="card-icon">📋</div>
-                <h3>Medical History</h3>
-                <p>Access your medical records</p>
-                <button className="card-btn">View History</button>
+              <div className="bg-white rounded-xl p-7 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer hover:-translate-y-2 hover:shadow-[0_12px_25px_rgba(0,0,0,0.15)] block">
+                <div className="text-5xl mb-4">📋</div>
+                <h3 className="text-[#333] my-4 text-lg font-bold">Medical History</h3>
+                <p className="text-[#666] text-sm mb-5">Access your medical records</p>
+                <button className="w-full p-2.5 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-md cursor-pointer font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(102,126,234,0.3)] block">View History</button>
               </div>
 
-              <div className="card">
-                <div className="card-icon">⚙️</div>
-                <h3>Profile Settings</h3>
-                <p>Update your profile information</p>
-                <button className="card-btn">Edit Profile</button>
+              <div className="bg-white rounded-xl p-7 shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer hover:-translate-y-2 hover:shadow-[0_12px_25px_rgba(0,0,0,0.15)] block">
+                <div className="text-5xl mb-4">⚙️</div>
+                <h3 className="text-[#333] my-4 text-lg font-bold">Profile Settings</h3>
+                <p className="text-[#666] text-sm mb-5">Update your profile information</p>
+                <button className="w-full p-2.5 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-md cursor-pointer font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-[0_5px_15px_rgba(102,126,234,0.3)] block">Edit Profile</button>
               </div>
             </>
           )}

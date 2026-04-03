@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { RoleSelector } from '../components/RoleSelector';
 import authAPI from '../api/auth';
-import './Auth.css';
 
 export const Signup = () => {
   const [formData, setFormData] = useState({
@@ -99,15 +98,15 @@ export const Signup = () => {
 
   if (showOtpForm) {
     return (
-      <div className="auth-container">
-        <div className="auth-card">
-          <h2>Verify Email</h2>
-          <p className="email-text">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] p-5 font-sans">
+        <div className="bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] px-10 py-12 w-full max-w-[450px] animate-[slideIn_0.5s_ease-out]">
+          <h2 className="text-center text-[#333] mb-2.5 text-3xl font-semibold">Verify Email</h2>
+          <p className="text-center text-[#666] mb-7 text-sm">
             We've sent a verification code to <strong>{registeredEmail}</strong>
           </p>
 
           <form onSubmit={handleOtpSubmit}>
-            <div className="form-group">
+            <div className="mb-4">
               <input
                 id="otpInput"
                 type="text"
@@ -115,22 +114,23 @@ export const Signup = () => {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 maxLength="6"
+                className="w-full px-4 py-3 border-2 border-[#e0e0e0] rounded-lg text-sm transition-colors box-border focus:outline-none focus:border-[#667eea] focus:ring-[3px] focus:ring-[#667eea]/10"
               />
             </div>
 
-            {error && <div className="error-message">{error}</div>}
+            {error && <div className="bg-[#fee] text-[#c33] px-4 py-3 rounded-lg mb-4 text-sm border-l-4 border-[#c33]">{error}</div>}
 
-            <button type="submit" className="submit-btn" disabled={loading}>
+            <button type="submit" className="w-full p-3 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-lg text-base font-semibold cursor-pointer transition-all mt-2.5 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(102,126,234,0.3)] disabled:opacity-70 disabled:cursor-not-allowed" disabled={loading}>
               {loading ? 'Verifying...' : 'Verify Email'}
             </button>
           </form>
 
-          <p className="switch-auth">
+          <p className="text-center mt-5 text-[#666] text-sm">
             Didn't receive code?{' '}
             <button
               type="button"
               onClick={() => setShowOtpForm(false)}
-              className="link-btn"
+              className="bg-transparent border-none text-[#667eea] cursor-pointer font-semibold no-underline p-0 transition-colors hover:text-[#764ba2] hover:underline"
             >
               Go back
             </button>
@@ -141,10 +141,10 @@ export const Signup = () => {
   }
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Create Your Account</h2>
-        <p className="subtitle">Join TimeCure - Bridging Care and Time</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] p-5 font-sans">
+      <div className="bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] px-10 py-12 w-full max-w-[450px] animate-[slideIn_0.5s_ease-out]">
+        <h2 className="text-center text-[#333] mb-2.5 text-3xl font-semibold">Create Your Account</h2>
+        <p className="text-center text-[#666] mb-7 text-sm">Join TimeCure - Bridging Care and Time</p>
 
         <form onSubmit={handleSubmit}>
           <RoleSelector
@@ -152,64 +152,74 @@ export const Signup = () => {
             onRoleChange={handleRoleChange}
           />
 
-          <div className="form-group">
-            <label>Full Name</label>
+          <div className="mb-4">
+            <label className="block mb-2 text-[#333] font-semibold text-sm">Full Name</label>
             <input
               type="text"
               name="username"
               value={formData.username}
               onChange={handleChange}
               placeholder="Enter your full name"
+              className="w-full px-4 py-3 border-2 border-[#e0e0e0] rounded-lg text-sm transition-colors box-border focus:outline-none focus:border-[#667eea] focus:ring-[3px] focus:ring-[#667eea]/10"
             />
           </div>
 
-          <div className="form-group">
-            <label>Email Address</label>
+          <div className="mb-4">
+            <label className="block mb-2 text-[#333] font-semibold text-sm">Email Address</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="Enter your email"
+              className="w-full px-4 py-3 border-2 border-[#e0e0e0] rounded-lg text-sm transition-colors box-border focus:outline-none focus:border-[#667eea] focus:ring-[3px] focus:ring-[#667eea]/10"
             />
           </div>
 
-          <div className="form-group">
-            <label>Password</label>
+          <div className="mb-4">
+            <label className="block mb-2 text-[#333] font-semibold text-sm">Password</label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               placeholder="Create a strong password"
+              className="w-full px-4 py-3 border-2 border-[#e0e0e0] rounded-lg text-sm transition-colors box-border focus:outline-none focus:border-[#667eea] focus:ring-[3px] focus:ring-[#667eea]/10"
             />
           </div>
 
-          <div className="form-group">
-            <label>Confirm Password</label>
+          <div className="mb-4">
+            <label className="block mb-2 text-[#333] font-semibold text-sm">Confirm Password</label>
             <input
               type="password"
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirm your password"
+              className="w-full px-4 py-3 border-2 border-[#e0e0e0] rounded-lg text-sm transition-colors box-border focus:outline-none focus:border-[#667eea] focus:ring-[3px] focus:ring-[#667eea]/10"
             />
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && <div className="bg-[#fee] text-[#c33] px-4 py-3 rounded-lg mb-4 text-sm border-l-4 border-[#c33]">{error}</div>}
 
-          <button type="submit" className="submit-btn" disabled={loading}>
+          <button type="submit" className="w-full p-3 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-lg text-base font-semibold cursor-pointer transition-all mt-2.5 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(102,126,234,0.3)] disabled:opacity-70 disabled:cursor-not-allowed" disabled={loading}>
             {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
 
-        <p className="switch-auth">
+        <p className="text-center mt-5 text-[#666] text-sm">
           Already have an account?{' '}
-          <Link to="/login" className="auth-link">
+          <Link to="/login" className="text-[#667eea] no-underline font-semibold transition-colors hover:text-[#764ba2] hover:underline">
             Login
           </Link>
         </p>
       </div>
+      <style>{`
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };
