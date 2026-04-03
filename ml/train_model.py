@@ -13,7 +13,8 @@ np.random.seed(42)
 # PatientId, AppointmentID, Gender, ScheduledDay, AppointmentDay, Age, Neighbourhood, Scholarship, Hipertension, Diabetes, Alcoholism, Handcap, SMS_received, No-show
 
 # Define features used by both models
-FEATURES = ['Age', 'Gender', 'Hipertension', 'Diabetes', 'Alcoholism', 'Handcap', 'Scholarship']
+FEATURES_TIME = ['Age', 'Gender', 'Hipertension', 'Diabetes', 'Alcoholism', 'Handcap', 'Scholarship']
+FEATURES_NO_SHOW = FEATURES_TIME + ['SMS_received']
 
 def main():
     # Load the dataset
@@ -44,7 +45,7 @@ def main():
 
     # Train No-Show Model
     print("Training No-Show Classification Model...")
-    X_s = df[FEATURES]
+    X_s = df[FEATURES_NO_SHOW]
     y_s = df['Target_Show']
     X_train_s, X_test_s, y_train_s, y_test_s = train_test_split(X_s, y_s, test_size=0.2, random_state=42)
     model_no_show = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -53,7 +54,7 @@ def main():
 
     # Train Consultation Time Model
     print("Training Time Prediction Regression Model...")
-    X_t = df[FEATURES]
+    X_t = df[FEATURES_TIME]
     y_t = df['ConsultationTime']
     X_train_t, X_test_t, y_train_t, y_test_t = train_test_split(X_t, y_t, test_size=0.2, random_state=42)
     model_time = RandomForestRegressor(n_estimators=100, random_state=42)

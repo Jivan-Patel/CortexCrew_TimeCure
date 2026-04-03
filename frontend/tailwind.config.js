@@ -7,14 +7,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        'primary': '#0f766e',     // Professional Teal (Trust, Medical)
-        'secondary': '#1e3a8a',   // Deep Corporate Navy (Expertise)
-        'light-bg': '#f3f4f6',    // Clean gray/white base
-        'border': '#e5e7eb',
+        'primary':   '#0f766e',   // Professional Teal
+        'secondary': '#1e3a8a',   // Deep Navy
+        'light-bg':  '#f1f5f9',   // Cool slate base
+        'subtle':    '#f8fafc',   // Near-white panel
+        'border':    '#e2e8f0',   // Slate-200
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-      }
+      },
     },
   },
   plugins: [],
