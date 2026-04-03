@@ -1,111 +1,119 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Clock, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BrainCircuit, UserPlus, CheckCircle } from 'lucide-react';
 
-const days = [
-  { name: 'Mon', date: '12' },
-  { name: 'Tue', date: '13' },
-  { name: 'Wed', date: '14' },
-  { name: 'Thu', date: '15' },
-  { name: 'Fri', date: '16' },
-];
+const AppointmentPanel = ({ onBook }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    age: '',
+    hypertension: false,
+    diabetes: false,
+    sms: false
+  });
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [prediction, setPrediction] = useState(null);
 
-const timeSlots = [
-  '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', 
-  '11:00 AM', '11:30 AM', '02:00 PM', '02:30 PM', 
-  '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'
-];
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.age) return;
+    
+    setIsPredicting(true);
+    // Simulate ML API Call delay
+    setTimeout(() => {
+      const mockNoShow = (Math.random() * 0.4 + (formData.sms ? -0.1 : 0.1)).toFixed(2);
+      const mockTime = Math.floor(Math.random() * 15) + (parseInt(formData.age) > 60 ? 15 : 10);
+      
+      setPrediction({ prob: Math.max(0, mockNoShow), time: mockTime });
+      setIsPredicting(false);
+    }, 1200);
+  };
 
-const bookedSlots = ['10:00 AM', '11:30 AM', '02:00 PM', '04:00 PM'];
-
-const AppointmentPanel = () => {
-  const [activeDate, setActiveDate] = useState('14');
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const handleConfirm = () => {
+    if (prediction) {
+      onBook({
+        name: formData.name,
+        mockNoShow: parseFloat(prediction.prob),
+        mockTime: prediction.time
+      });
+      setFormData({ name: '', age: '', hypertension: false, diabetes: false, sms: false });
+      setPrediction(null);
+    }
+  };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.1 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-      className="glass-panel p-6 flex flex-col h-full"
-    >
-      <div className="flex justify-between items-center mb-6">
+    <div className="expert-panel p-6 h-full flex flex-col">
+      <div className="flex items-center gap-3 mb-6 border-b border-border pb-4">
+        <div className="p-2 bg-primary/10 rounded-lg text-primary">
+          <BrainCircuit className="w-5 h-5" />
+        </div>
         <div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Schedule Appointment</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Dr. Sarah Connor's Calendar</p>
+          <h3 className="text-lg font-bold text-slate-900 leading-tight">ML Predictive Booking</h3>
+          <p className="text-xs text-slate-500">Injects features into Python API</p>
         </div>
-        <div className="flex gap-2">
-          <button className="p-2 border border-slate-200 dark:border-glass-border-dark rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-            <ChevronLeft size={16} />
+      </div>
+
+      {!prediction ? (
+        <form onSubmit={handleSubmit} className="space-y-4 flex-1">
+          <div>
+            <label className="text-xs font-semibold text-slate-700 mb-1 block">Patient Name</label>
+            <input type="text" className="glass-input" placeholder="e.g. John Doe" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required/>
+          </div>
+          
+          <div>
+            <label className="text-xs font-semibold text-slate-700 mb-1 block">Patient Age</label>
+            <input type="number" className="glass-input" placeholder="e.g. 45" value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} required/>
+          </div>
+
+          <div className="pt-2">
+            <label className="text-xs font-semibold text-slate-700 mb-2 block">Clinical Indicators (Features)</label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.hypertension} onChange={e => setFormData({...formData, hypertension: e.target.checked})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                Hypertension History
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.diabetes} onChange={e => setFormData({...formData, diabetes: e.target.checked})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                Diabetes Diagnosed
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.sms} onChange={e => setFormData({...formData, sms: e.target.checked})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                SMS Reminder Sent
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" disabled={isPredicting} className="btn-primary w-full mt-4">
+            {isPredicting ? "Running Model..." : "Predict & Review"}
           </button>
-          <button className="p-2 border border-slate-200 dark:border-glass-border-dark rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-            <ChevronRight size={16} />
-          </button>
+        </form>
+      ) : (
+        <div className="flex-1 flex flex-col justify-center items-center text-center space-y-6 slide-in-bottom">
+          <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2">
+            <CheckCircle className="w-8 h-8" />
+          </div>
+          <div>
+            <h4 className="text-xl font-bold text-slate-900 mb-1">Prediction Ready</h4>
+            <p className="text-sm text-slate-500">ML model estimation based on inputs.</p>
+          </div>
+          
+          <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 flex justify-around">
+            <div>
+              <p className="text-xs text-slate-500 font-medium mb-1">No-Show Risk</p>
+              <p className={`text-xl font-bold ${prediction.prob > 0.4 ? 'text-red-600' : 'text-primary'}`}>{Math.round(prediction.prob * 100)}%</p>
+            </div>
+            <div className="w-px bg-slate-200"></div>
+            <div>
+              <p className="text-xs text-slate-500 font-medium mb-1">Est. Duration</p>
+              <p className="text-xl font-bold text-slate-900">{prediction.time} <span className="text-sm text-slate-500 font-medium">min</span></p>
+            </div>
+          </div>
+
+          <div className="w-full flex gap-3 pt-4">
+            <button onClick={() => setPrediction(null)} className="btn-outline flex-1">Cancel</button>
+            <button onClick={handleConfirm} className="btn-primary flex-1"><UserPlus className="w-4 h-4"/> Add to Queue</button>
+          </div>
         </div>
-      </div>
-
-      {/* Days row */}
-      <div className="flex justify-between gap-2 mb-6">
-        {days.map((day) => {
-          const isActive = day.date === activeDate;
-          return (
-            <button
-              key={day.date}
-              onClick={() => setActiveDate(day.date)}
-              className={`flex-1 flex flex-col items-center py-3 rounded-xl transition-all duration-300 border ${
-                isActive 
-                  ? 'bg-primary/10 border-primary text-primary shadow-[0_0_15px_rgba(13,148,136,0.1)] scale-105' 
-                  : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <span className="text-xs uppercase font-medium mb-1">{day.name}</span>
-              <span className={`text-xl font-bold ${isActive ? 'text-primary' : 'text-slate-700 dark:text-slate-300'}`}>{day.date}</span>
-              {isActive && <div className="w-1 h-1 bg-primary rounded-full mt-1"></div>}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Time slots */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 mb-6 pointer-events-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {timeSlots.map((slot) => {
-            const isBooked = bookedSlots.includes(slot);
-            const isSelected = selectedSlot === slot;
-            
-            return (
-              <motion.button
-                key={slot}
-                whileHover={!isBooked ? { scale: 1.03 } : {}}
-                whileTap={!isBooked ? { scale: 0.98 } : {}}
-                onClick={() => !isBooked && setSelectedSlot(slot)}
-                disabled={isBooked}
-                className={`py-3 rounded-xl flex items-center justify-center gap-2 transition-colors border shadow-sm ${
-                  isBooked 
-                    ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800/30 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500' 
-                    : isSelected
-                      ? 'bg-primary border-primary text-white shadow-md'
-                      : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-primary/50'
-                }`}
-              >
-                <Clock className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : (isBooked ? 'text-slate-400 dark:text-slate-600' : 'text-primary')}`} />
-                <span className="text-sm font-medium">{slot}</span>
-              </motion.button>
-            )
-          })}
-        </div>
-      </div>
-
-      <motion.button
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-        className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-[15px] mt-auto"
-      >
-        <Calendar className="w-5 h-5" />
-        Book Appointment
-      </motion.button>
-    </motion.div>
+      )}
+    </div>
   );
 };
 
