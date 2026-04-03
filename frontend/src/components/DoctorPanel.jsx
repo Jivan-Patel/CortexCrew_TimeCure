@@ -25,27 +25,28 @@ const DoctorPanel = () => {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.5 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.5, delay: 0.4 }}
       className="glass-panel p-6 flex flex-col h-full"
     >
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-white">Medical Staff</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Medical Staff</h3>
         <button className="text-xs text-primary hover:underline font-medium">View All</button>
       </div>
 
       <div className="space-y-4">
         {doctors.map((doctor, idx) => {
           let statusConfig = {
-            color: 'text-primary bg-primary/20 ring-1 ring-primary/30',
+            color: 'text-primary bg-primary/10 border-primary/20',
             dot: 'bg-primary',
             icon: CheckCircle2
           };
 
           if (doctor.status === 'Busy') {
-            statusConfig = { color: 'text-amber-500 bg-amber-500/20 ring-1 ring-amber-500/30', dot: 'bg-amber-500', icon: Clock };
+            statusConfig = { color: 'text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-500/20 border-amber-200 dark:border-amber-500/30', dot: 'bg-amber-500', icon: Clock };
           } else if (doctor.status === 'Offline') {
-            statusConfig = { color: 'text-slate-400 bg-slate-700/50 ring-1 ring-slate-600', dot: 'bg-slate-500', icon: XCircle };
+            statusConfig = { color: 'text-slate-500 bg-slate-100 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600', dot: 'bg-slate-500', icon: XCircle };
           }
 
           const Icon = statusConfig.icon;
@@ -54,24 +55,25 @@ const DoctorPanel = () => {
             <motion.div 
               key={doctor.id} 
               initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 + (idx * 0.1) }}
-              className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-800/60 transition-colors group border border-transparent hover:border-glass-border cursor-pointer" 
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 + (idx * 0.1) }}
+              className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors group border border-slate-100 dark:border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer shadow-sm dark:shadow-none" 
               onClick={() => toggleStatus(doctor.id)}
             >
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center group-hover:border-primary/50 transition-colors">
-                    <Stethoscope className="text-slate-400 w-5 h-5 group-hover:text-primary transition-colors" />
+                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-primary/50 transition-colors">
+                    <Stethoscope className="text-slate-500 dark:text-slate-400 w-5 h-5 group-hover:text-primary transition-colors" />
                   </div>
-                  <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-slate-900 ${statusConfig.dot} transition-colors duration-300`}></div>
+                  <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${statusConfig.dot} transition-colors duration-300`}></div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-white group-hover:text-primary transition-colors">{doctor.name}</h4>
-                  <p className="text-xs text-slate-400 mt-0.5">{doctor.spec}</p>
+                  <h4 className="text-sm font-semibold text-slate-800 dark:text-white group-hover:text-primary transition-colors">{doctor.name}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">{doctor.spec}</p>
                 </div>
               </div>
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${statusConfig.color} scale-90 transition-colors duration-300`}>
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${statusConfig.color} scale-90 transition-colors duration-300`}>
                 <Icon className="w-3.5 h-3.5" />
                 <span className="text-xs font-semibold">{doctor.status}</span>
               </div>
