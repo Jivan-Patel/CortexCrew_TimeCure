@@ -266,7 +266,7 @@ app.post("/trigger-sms/:id", async (req, res) => {
     if (!p) return res.status(404).json({ error: "Patient not found" });
     if (!p.phone) return res.status(400).json({ error: "Patient has no phone number on record." });
 
-    const type = req.body.type || "normal"; // "urgent" or "normal"
+    const type = req.body?.type || "normal"; // "urgent" or "normal"
     const success = await sendSmsReminder(p, type);
     
     if (success) {

@@ -22,11 +22,6 @@ FEATURES_TIME   = ['Age', 'Gender', 'Hipertension', 'Diabetes', 'Alcoholism', 'H
 # Model Loading
 # ──────────────────────────────────────────────
 MODEL_DIR = "ml" if os.path.basename(os.getcwd()) != "ml" else "."
-<<<<<<< theme-refactor
-FEATURES_TIME = ['Age', 'Gender', 'Hipertension', 'Diabetes', 'Alcoholism', 'Handcap', 'Scholarship']
-FEATURES_NO_SHOW = FEATURES_TIME + ['SMS_received']
-=======
->>>>>>> main
 
 no_show_path = os.path.join(MODEL_DIR, "no_show.pkl")
 time_path    = os.path.join(MODEL_DIR, "time.pkl")
@@ -82,25 +77,6 @@ def predict():
         if not data:
             return jsonify({"error": "No JSON body provided."}), 400
 
-<<<<<<< theme-refactor
-        # Build feature row — fall back to 0 for missing values
-        row = {}
-        for feat in FEATURES_NO_SHOW:
-            val = data.get(feat)
-            if val is None:
-                val = data.get(feat.lower(), 0)
-            row[feat] = val
-
-        # Use DataFrame so scikit-learn doesn't warn about feature names
-        input_df_show = pd.DataFrame([row], columns=FEATURES_NO_SHOW)
-        
-        row_time = {f: row[f] for f in FEATURES_TIME}
-        input_df_time = pd.DataFrame([row_time], columns=FEATURES_TIME)
-
-        # 1. No-Show Probability
-        #    model returns P(Show=1), so P(No-show) = 1 - P(Show)
-        show_prob    = model_no_show.predict_proba(input_df_show)[0][1]
-=======
         def get_val(key, default=0):
             """Get value, trying original casing and lowercase fallback."""
             return data.get(key, data.get(key.lower(), default))
@@ -125,25 +101,8 @@ def predict():
 
         # 1. No-Show Probability
         show_prob    = model_no_show.predict_proba(noshow_df)[0][1]
->>>>>>> main
         no_show_prob = round(1 - show_prob, 2)
         
-        sms_strategy = "low_risk"
-        if no_show_prob > 0.4:
-            sms_strategy = "high_risk"
-        elif no_show_prob > 0.2:
-            sms_strategy = "medium_risk"
-
-<<<<<<< theme-refactor
-        # 2. Consultation Time (minutes)
-        estimated_time = round(float(model_time.predict(input_df_time)[0]), 1)
-
-        return jsonify({
-            "no_show_probability": no_show_prob,
-            "estimated_time": estimated_time,
-            "sms_strategy": sms_strategy,
-            "status": "success"
-=======
         # 2. Consultation Time
         estimated_time = round(float(model_time.predict(time_df)[0]), 1)
 
@@ -160,7 +119,6 @@ def predict():
             "estimated_time":      estimated_time,
             "sms_strategy":        sms_strategy,
             "status":              "success"
->>>>>>> main
         })
 
     except Exception as e:
