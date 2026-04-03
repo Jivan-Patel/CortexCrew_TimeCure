@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Activity, Calendar, Clock, HeartPulse } from 'lucide-react';
 import Logo from '../components/Logo';
@@ -9,15 +9,35 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    setErrorMsg('');
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+      
+      // Store token if needed, usually handles HttpOnly cookie, but assuming success
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('/dashboard');
+      }, 1000);
+    } catch (err) {
       setIsLoading(false);
-      navigate('/dashboard');
-    }, 1500);
+      setErrorMsg(err.message);
+    }
   };
 
   return (
@@ -105,6 +125,12 @@ const Login = () => {
             <p className="text-slate-400">Please sign in to access the dashboard</p>
           </div>
 
+          {errorMsg && (
+            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center">
+              {errorMsg}
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-1">
               <label className="text-sm font-medium text-slate-300 ml-1">Email Address</label>
@@ -156,7 +182,7 @@ const Login = () => {
           </form>
 
           <p className="text-center text-sm text-slate-500 mt-8">
-            Don't have an account? <a href="#" className="text-primary hover:underline">Contact Administrator</a>
+            Don't have an account? <Link to="/signup" className="text-primary hover:underline">Create Account</Link>
           </p>
         </motion.div>
       </div>

@@ -2,12 +2,29 @@ import React, { useState } from 'react';
 import { BrainCircuit, UserPlus, CheckCircle, Loader2 } from 'lucide-react';
 import { useQueue } from '../context/QueueContext';
 
+<<<<<<< theme-refactor
 const AppointmentPanel = () => {
   const { bookPatient, isPredicting } = useQueue();
   const [form, setForm] = useState({ name: '', age: '', gender: 0, hypertension: false, diabetes: false, alcoholism: false, scholarship: false });
+=======
+const AppointmentPanel = ({ onBook = () => {} }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    Age: '',
+    Gender: 0,
+    Hipertension: 0,
+    Diabetes: 0,
+    Alcoholism: 0,
+    Handcap: 0,
+    Scholarship: 0,
+    SMS_received: 0
+  });
+  const [isPredicting, setIsPredicting] = useState(false);
+>>>>>>> main
   const [prediction, setPrediction] = useState(null);
   const [confirming, setConfirming] = useState(false);
 
+<<<<<<< theme-refactor
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
   const handlePredict = async (e) => {
@@ -29,6 +46,54 @@ const AppointmentPanel = () => {
     high_risk:   { label: 'High Risk', color: 'text-red-600 bg-red-50 border-red-200', sms: 'SMS sent 24h + 2h before' },
     medium_risk: { label: 'Medium Risk', color: 'text-amber-600 bg-amber-50 border-amber-200', sms: 'SMS sent 24h before' },
     low_risk:    { label: 'Low Risk', color: 'text-primary bg-primary/10 border-primary/20', sms: 'No SMS required' },
+=======
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.name || formData.Age === '') return;
+    
+    setIsPredicting(true);
+    try {
+      const payload = {
+        ...formData,
+        Age: parseInt(formData.Age)
+      };
+      
+      const response = await fetch('http://localhost:3000/api/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setPrediction({ prob: data.prediction, time: data.estimatedDuration || 15 });
+      } else {
+        console.error("Booking error:", data);
+        alert(data.message || "Error generating prediction");
+      }
+    } catch (error) {
+      console.error("Error connecting to backend:", error);
+      alert("Backend service unreachable");
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
+  const handleConfirm = () => {
+    if (prediction) {
+      onBook({
+        name: formData.name,
+        mockNoShow: parseFloat(prediction.prob),
+        mockTime: prediction.time
+      });
+      setFormData({
+        name: '', Age: '', Gender: 0, Hipertension: 0, Diabetes: 0,
+        Alcoholism: 0, Handcap: 0, Scholarship: 0, SMS_received: 0
+      });
+      setPrediction(null);
+    }
+>>>>>>> main
   };
 
   return (
@@ -48,6 +113,7 @@ const AppointmentPanel = () => {
             <label className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-1 block">Patient Name</label>
             <input required className="glass-input" placeholder="Full name" value={form.name} onChange={e => set('name', e.target.value)} />
           </div>
+<<<<<<< theme-refactor
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -78,6 +144,48 @@ const AppointmentPanel = () => {
                   {label}
                 </label>
               ))}
+=======
+          
+          <div>
+            <label className="text-xs font-semibold text-slate-700 mb-1 block">Patient Age</label>
+            <input type="number" className="glass-input" placeholder="e.g. 45" value={formData.Age} onChange={e => setFormData({...formData, Age: e.target.value})} required/>
+          </div>
+
+          <div className="pt-2">
+            <label className="text-xs font-semibold text-slate-700 mb-2 block">Clinical Indicators (Features)</label>
+            <div className="space-y-2 h-48 overflow-y-auto pr-2 custom-scrollbar">
+              <label className="flex items-center justify-between text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <span>Gender (Female / Male)</span>
+                <select className="bg-transparent border border-gray-300 rounded text-xs p-1" value={formData.Gender} onChange={e => setFormData({...formData, Gender: parseInt(e.target.value)})}>
+                  <option value={0}>Female</option>
+                  <option value={1}>Male</option>
+                </select>
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.Hipertension === 1} onChange={e => setFormData({...formData, Hipertension: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                Hypertension History
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.Diabetes === 1} onChange={e => setFormData({...formData, Diabetes: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                Diabetes Diagnosed
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.Alcoholism === 1} onChange={e => setFormData({...formData, Alcoholism: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                Alcoholism History
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.Handcap === 1} onChange={e => setFormData({...formData, Handcap: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                Handicapped
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.Scholarship === 1} onChange={e => setFormData({...formData, Scholarship: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                Bolsa Família (Scholarship)
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.SMS_received === 1} onChange={e => setFormData({...formData, SMS_received: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                SMS Reminder Sent
+              </label>
+>>>>>>> main
             </div>
           </div>
 

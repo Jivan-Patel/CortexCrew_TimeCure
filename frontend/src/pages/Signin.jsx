@@ -7,6 +7,7 @@ const Signin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+<<<<<<< theme-refactor
   const [role, setRole] = useState('doctor');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -15,8 +16,11 @@ const Signin = () => {
     doctor:  { email: 'doctor@timecure.io',  password: 'doctor123'  },
     patient: { email: 'patient@timecure.io', password: 'patient123' },
   };
+=======
+  const [errorMsg, setErrorMsg] = useState('');
+>>>>>>> main
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     const valid = MOCK_CREDS[role];
@@ -25,7 +29,33 @@ const Signin = () => {
       return;
     }
     setIsLoading(true);
+<<<<<<< theme-refactor
     setTimeout(() => navigate(role === 'doctor' ? '/doctor' : '/patient'), 1200);
+=======
+    setErrorMsg('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+      
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('/dashboard');
+      }, 1000);
+    } catch (err) {
+      setIsLoading(false);
+      setErrorMsg(err.message);
+    }
+>>>>>>> main
   };
 
   return (
@@ -96,11 +126,23 @@ const Signin = () => {
             {role === 'doctor' ? 'doctor@timecure.io / doctor123' : 'patient@timecure.io / patient123'}
           </div>
 
+<<<<<<< theme-refactor
           {error && <p className="mb-4 text-sm text-red-600 font-medium bg-red-50 p-3 rounded-lg border border-red-200">{error}</p>}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-1 block">Email</label>
+=======
+          {errorMsg && (
+            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center">
+              {errorMsg}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 ml-1 uppercase tracking-wide">Email Address</label>
+>>>>>>> main
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
