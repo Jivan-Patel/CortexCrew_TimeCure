@@ -3,6 +3,7 @@ import Signin from './pages/Signin';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import { useTheme } from './hooks/useTheme';
+import AppointmentPage from './pages/AppointmentPage';
 
 function App() {
   useTheme(); // Initialize theme
@@ -14,6 +15,7 @@ function App() {
         <Route path="/login" element={<Signin />} />
         <Route path="/register" element={<Signup />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/appointment" element={<AppointmentPage />} />
       </Routes>
     </Router>
   );

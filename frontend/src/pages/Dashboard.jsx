@@ -112,9 +112,6 @@ const Dashboard = () => {
             {/* PANELS */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
               
-              <div className="xl:col-span-1 h-full">
-                <AppointmentPanel onBook={handleBook} />
-              </div>
 
               <div className="xl:col-span-2 flex flex-col gap-6">
                 <QueuePanel queue={queue} onUpdateStatus={updatePatientStatus} />

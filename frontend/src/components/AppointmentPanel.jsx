@@ -1,30 +1,52 @@
 import React, { useState } from 'react';
 import { BrainCircuit, UserPlus, CheckCircle } from 'lucide-react';
 
-const AppointmentPanel = ({ onBook }) => {
+const AppointmentPanel = ({ onBook = () => {} }) => {
   const [formData, setFormData] = useState({
     name: '',
-    age: '',
-    hypertension: false,
-    diabetes: false,
-    sms: false
+    Age: '',
+    Gender: 0,
+    Hipertension: 0,
+    Diabetes: 0,
+    Alcoholism: 0,
+    Handcap: 0,
+    Scholarship: 0,
+    SMS_received: 0
   });
   const [isPredicting, setIsPredicting] = useState(false);
   const [prediction, setPrediction] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.age) return;
+    if (!formData.name || formData.Age === '') return;
     
     setIsPredicting(true);
-    // Simulate ML API Call delay
-    setTimeout(() => {
-      const mockNoShow = (Math.random() * 0.4 + (formData.sms ? -0.1 : 0.1)).toFixed(2);
-      const mockTime = Math.floor(Math.random() * 15) + (parseInt(formData.age) > 60 ? 15 : 10);
+    try {
+      const payload = {
+        ...formData,
+        Age: parseInt(formData.Age)
+      };
       
-      setPrediction({ prob: Math.max(0, mockNoShow), time: mockTime });
+      const response = await fetch('http://localhost:3000/api/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setPrediction({ prob: data.prediction, time: data.estimatedDuration || 15 });
+      } else {
+        console.error("Booking error:", data);
+        alert(data.message || "Error generating prediction");
+      }
+    } catch (error) {
+      console.error("Error connecting to backend:", error);
+      alert("Backend service unreachable");
+    } finally {
       setIsPredicting(false);
-    }, 1200);
+    }
   };
 
   const handleConfirm = () => {
@@ -34,7 +56,10 @@ const AppointmentPanel = ({ onBook }) => {
         mockNoShow: parseFloat(prediction.prob),
         mockTime: prediction.time
       });
-      setFormData({ name: '', age: '', hypertension: false, diabetes: false, sms: false });
+      setFormData({
+        name: '', Age: '', Gender: 0, Hipertension: 0, Diabetes: 0,
+        Alcoholism: 0, Handcap: 0, Scholarship: 0, SMS_received: 0
+      });
       setPrediction(null);
     }
   };
@@ -60,22 +85,41 @@ const AppointmentPanel = ({ onBook }) => {
           
           <div>
             <label className="text-xs font-semibold text-slate-700 mb-1 block">Patient Age</label>
-            <input type="number" className="glass-input" placeholder="e.g. 45" value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} required/>
+            <input type="number" className="glass-input" placeholder="e.g. 45" value={formData.Age} onChange={e => setFormData({...formData, Age: e.target.value})} required/>
           </div>
 
           <div className="pt-2">
             <label className="text-xs font-semibold text-slate-700 mb-2 block">Clinical Indicators (Features)</label>
-            <div className="space-y-2">
+            <div className="space-y-2 h-48 overflow-y-auto pr-2 custom-scrollbar">
+              <label className="flex items-center justify-between text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <span>Gender (Female / Male)</span>
+                <select className="bg-transparent border border-gray-300 rounded text-xs p-1" value={formData.Gender} onChange={e => setFormData({...formData, Gender: parseInt(e.target.value)})}>
+                  <option value={0}>Female</option>
+                  <option value={1}>Male</option>
+                </select>
+              </label>
               <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
-                <input type="checkbox" checked={formData.hypertension} onChange={e => setFormData({...formData, hypertension: e.target.checked})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                <input type="checkbox" checked={formData.Hipertension === 1} onChange={e => setFormData({...formData, Hipertension: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
                 Hypertension History
               </label>
               <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
-                <input type="checkbox" checked={formData.diabetes} onChange={e => setFormData({...formData, diabetes: e.target.checked})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                <input type="checkbox" checked={formData.Diabetes === 1} onChange={e => setFormData({...formData, Diabetes: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
                 Diabetes Diagnosed
               </label>
               <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
-                <input type="checkbox" checked={formData.sms} onChange={e => setFormData({...formData, sms: e.target.checked})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                <input type="checkbox" checked={formData.Alcoholism === 1} onChange={e => setFormData({...formData, Alcoholism: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                Alcoholism History
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.Handcap === 1} onChange={e => setFormData({...formData, Handcap: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                Handicapped
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.Scholarship === 1} onChange={e => setFormData({...formData, Scholarship: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
+                Bolsa Família (Scholarship)
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600 bg-subtle p-2 rounded-lg border border-border cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" checked={formData.SMS_received === 1} onChange={e => setFormData({...formData, SMS_received: e.target.checked ? 1 : 0})} className="rounded text-primary focus:ring-primary w-4 h-4"/>
                 SMS Reminder Sent
               </label>
             </div>
