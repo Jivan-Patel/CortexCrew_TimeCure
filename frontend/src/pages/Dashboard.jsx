@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Users, Stethoscope, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Users, Stethoscope } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import StatsCard from '../components/StatsCard';
@@ -13,28 +13,29 @@ import NotificationPanel from '../components/NotificationPanel';
 
 const Dashboard = () => {
   return (
-    <div className="flex h-screen bg-darker overflow-hidden font-sans">
+    <div className="flex h-screen bg-light dark:bg-darker overflow-hidden font-sans transition-colors duration-300">
       <Sidebar />
       <div className="flex-1 flex flex-col relative overflow-hidden">
-        {/* Background glow effects */}
-        <div className="absolute top-[-20%] left-[20%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[150px] pointer-events-none"></div>
-        <div className="absolute bottom-[0%] right-[-10%] w-[30%] h-[30%] rounded-full bg-neon-blue/5 blur-[120px] pointer-events-none"></div>
+        
+        {/* Subtle Background Theme Gradients */}
+        <div className="absolute top-[-20%] left-[20%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[150px] pointer-events-none transition-all"></div>
+        <div className="absolute bottom-[0%] right-[-10%] w-[30%] h-[30%] rounded-full bg-slate-400/5 dark:bg-slate-800/20 blur-[120px] pointer-events-none transition-all"></div>
 
         <Navbar />
         
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-6 scroll-smooth z-10 relative custom-scrollbar">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-8 scroll-smooth z-10 relative custom-scrollbar">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col gap-6 max-w-[1600px] mx-auto"
+            className="flex flex-col gap-6 max-w-[1600px] mx-auto pb-8"
           >
             {/* 1️⃣ STATS CARDS ROW */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                <StatsCard title="Total Appointments" value={124} icon={Calendar} trend="up" trendValue="12%" colorClass="bg-primary" />
-               <StatsCard title="Average Wait Time" value="14 min" icon={Clock} trend="down" trendValue="5%" colorClass="bg-amber-500" />
-               <StatsCard title="No-show Rate" value="4.2%" icon={Users} trend="down" trendValue="1.2%" colorClass="bg-neon-red" />
-               <StatsCard title="Doctor Utilization" value="88%" icon={Stethoscope} trend="up" trendValue="3%" colorClass="bg-neon-blue" />
+               <StatsCard title="Average Wait Time" value="14 min" icon={Clock} trend="down" trendValue="5%" colorClass="bg-slate-700" />
+               <StatsCard title="No-show Rate" value="4.2%" icon={Users} trend="down" trendValue="1.2%" colorClass="bg-red-600" />
+               <StatsCard title="Doctor Utilization" value="88%" icon={Stethoscope} trend="up" trendValue="3%" colorClass="bg-slate-800" />
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -47,7 +48,7 @@ const Dashboard = () => {
                 </div>
                 
                 {/* 5️⃣ ANALYTICS CHARTS */}
-                <div className="h-[350px]">
+                <div className="h-[auto] xl:h-[350px]">
                   <AnalyticsCharts />
                 </div>
 
@@ -70,7 +71,7 @@ const Dashboard = () => {
             </div>
 
             {/* Bottom Row */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pb-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* 6️⃣ DOCTOR AVAILABILITY PANEL */}
               <div className="xl:col-span-2 h-[350px]">
                 <DoctorPanel />
