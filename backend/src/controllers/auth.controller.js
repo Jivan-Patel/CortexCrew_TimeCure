@@ -120,7 +120,7 @@ export async function refreshToken(req,res){
     const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
     const session = await sessionModel.findOne({
-        refreshToken,
+        refreshTokenHash,
         revoked: false
     })
     if(!session){
@@ -131,14 +131,14 @@ export async function refreshToken(req,res){
     /////////////////////////////////////////////////
 
     const accessToken = jwt.sign({
-        id:decoded._id
+        id:decoded.id
     },config.JWT_SECRET,
         {
             expiresIn:"15m"
         }
     )
     const newrefreshToken = jwt.sign({
-        id:decoded._id
+        id:decoded.id
     },config.JWT_SECRET,
         {
             expiresIn:"7d"
