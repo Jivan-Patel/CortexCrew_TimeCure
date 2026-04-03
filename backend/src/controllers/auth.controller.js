@@ -60,6 +60,7 @@ export async function register(req,res){
 
     const accessToken = jwt.sign({
         id:user._id,
+        role: user.role,
         sessionId: session.id,
     }, config.JWT_SECRET, {
         expiresIn: "15min"
@@ -118,7 +119,7 @@ export async function refreshToken(req,res){
     //////////////////// for log out ////////////////
     const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
-    const session = await sessionModel.findPOne({
+    const session = await sessionModel.findOne({
         refreshToken,
         revoked: false
     })
@@ -144,7 +145,7 @@ export async function refreshToken(req,res){
         }
     )
 
-    const newrefreshTokenHash = crypto.createHash("sha256").update(newrefreshTokenHash).digest("hex");
+    const newrefreshTokenHash = crypto.createHash("sha256").update(newrefreshToken).digest("hex");
 
     session.refreshTokenHash = newrefreshTokenHash;
     await session.save();
@@ -262,6 +263,7 @@ export async function login(req,res){
 
     const accessToken = jwt.sign({
         id:user._id,
+        role: user.role,
         sessionId:session._id
     },config.JWT_SECRET,{
         expiresIn:"15m"

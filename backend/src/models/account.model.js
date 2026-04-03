@@ -13,6 +13,14 @@ const accountSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+  },
+  role: {
+    type: String,
+    enum: ["patient", "receptionist", "doctor"],
+    default: "patient"
+  },
+  phone: {
+    type: String
   }
 }, { timestamps: true });
 
