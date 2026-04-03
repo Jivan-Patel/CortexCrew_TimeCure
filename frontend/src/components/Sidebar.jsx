@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Calendar, Stethoscope, Settings, Sun, Moon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Calendar, Stethoscope, Settings, Sun, Moon, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import Logo from './Logo';
 import { useTheme } from '../hooks/useTheme';
+import { useAuth } from '../hooks/useAuth';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -11,8 +12,11 @@ const navItems = [
   { to: '/symptoms', icon: Stethoscope, label: 'Symptoms Check' },
 ];
 
+const ROLE_COLORS = { patient: 'var(--green)', doctor: 'var(--red)', receptionist: '#f0a500' };
+
 export default function Sidebar() {
   const { theme, setTheme } = useTheme();
+  const { user, role, isLoggedIn, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -88,14 +92,27 @@ export default function Sidebar() {
           </AnimatePresence>
         </button>
 
+        {/* Logout button — only shown when logged in */}
+        {isLoggedIn && (
+          <button onClick={logout} className="nav-item"
+            style={{ width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', color: 'var(--red)' }}>
+            <LogOut size={17} style={{ flexShrink: 0 }} />
+            <AnimatePresence>
+              {!collapsed && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="nav-label">Sign Out</motion.span>}
+            </AnimatePresence>
+          </button>
+        )}
+
         {/* User avatar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', marginTop: 4 }}>
-          <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg, #3fb950, #f85149)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0, color: '#fff' }}>P</div>
+          <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg, #3fb950, #f85149)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0, color: '#fff' }}>
+            {(user?.username?.[0] || 'P').toUpperCase()}
+          </div>
           <AnimatePresence>
             {!collapsed && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Prathvik</div>
-                <div style={{ fontSize: 11, color: 'var(--text-sec)' }}>Patient</div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{user?.username || 'Patient'}</div>
+                <div style={{ fontSize: 10, color: ROLE_COLORS[role] || 'var(--text-sec)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{role || 'patient'}</div>
               </motion.div>
             )}
           </AnimatePresence>

@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
-import { Clock, Users, CheckCircle2, TrendingUp, Heart, Activity, Bell, ArrowUpRight, ChevronRight } from 'lucide-react';
+import { Clock, Calendar, CheckCircle2, Heart, Activity, Bell, ArrowUpRight, ChevronRight, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import Card3D from '../components/Card3D';
+import { useAuth } from '../hooks/useAuth';
+import { useQueue } from '../hooks/useQueue';
 
 /* ── Mock data ─────────────────────── */
 const pieData = [
@@ -98,17 +100,22 @@ function QueueStepper({ stage = 0 }) {
 const fadeUp = { hidden: { opacity: 0, y: 20 }, show: (i) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] } }) };
 
 export default function Dashboard() {
+  const { user, role } = useAuth();
+  const { queue, stats, isLive, lastUpdated, error, refresh, myWaitTime } = useQueue();
   const [showNotif, setShowNotif] = useState(false);
-  const [waitTime, setWaitTime] = useState(23);
-  const [queuePos, setQueuePos] = useState(3);
-  const [stage, setStage] = useState(0);
 
-  // Simulate live updates
-  useEffect(() => {
-    const t1 = setTimeout(() => { setWaitTime(18); setQueuePos(2); }, 12000);
-    const t2 = setTimeout(() => { setWaitTime(8); setQueuePos(1); setStage(1); }, 28000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+  // Find current user's position in queue (first 'waiting' entry as demo)
+  const myEntry = queue.find(p => p.status === 'waiting' || p.status === 'in-progress');
+  const myIndex = myEntry ? queue.indexOf(myEntry) : 0;
+  const waitTime = myEntry ? (myEntry.waitTime ?? myWaitTime(myIndex)) : 23;
+  const queuePos = myIndex + 1;
+  const stage = myEntry?.status === 'in-progress' ? 1 : myEntry?.status === 'waiting' ? 0 : 2;
+
+  // Dynamic AI insight from live stats
+  const efficiency = stats.total > 0
+    ? Math.round(((stats.done + stats.inProgress) / stats.total) * 100)
+    : 87;
+  const highRiskCount = queue.filter(p => (p.noShowProb ?? 0) > 0.4).length;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
@@ -157,9 +164,14 @@ export default function Dashboard() {
         <div style={{ gridColumn: 'span 3', gridRow: 'span 2' }}>
           <Card3D style={{ height: '100%', minHeight: 240 }} intensity={6}>
             <div style={{ position: 'absolute', top: 0, right: 0, width: '60%', height: '100%', background: 'radial-gradient(ellipse at right, rgba(63,185,80,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div className="label-caps" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--green)', display: 'inline-block', boxShadow: '0 0 0 3px var(--green-dim)', animation: 'pulse 2s infinite' }} />
-              Updated live
+            <div className="label-caps" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: isLive ? 'var(--green)' : 'var(--red)', display: 'inline-block', boxShadow: `0 0 0 3px ${isLive ? 'var(--green-dim)' : 'var(--red-dim)'}` }} />
+                {isLive ? 'Live — port 4000' : 'Offline — mock data'}
+              </div>
+              <button onClick={refresh} title="Refresh queue" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-sec)', padding: 2, display: 'flex' }}>
+                {isLive ? <Wifi size={13} style={{ color: 'var(--green)' }} /> : <RefreshCw size={13} />}
+              </button>
             </div>
             <div style={{ marginTop: '1.25rem' }}>
               <AnimatePresence mode="popLayout">
@@ -202,15 +214,19 @@ export default function Dashboard() {
           <Card3D intensity={5} style={{ height: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
               <div className="label-caps">AI Insight</div>
-              <span className="badge badge-green">On Schedule</span>
+              <span className={`badge badge-${highRiskCount > 1 ? 'red' : 'green'}`}>
+                {highRiskCount > 1 ? `${highRiskCount} High Risk` : 'On Schedule'}
+              </span>
             </div>
             <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)' }}>
-              Clinic efficiency is <strong>87%</strong> today. Your wait time is calculated from live queue data + predicted consultation durations.
+              Clinic efficiency is <strong>{efficiency}%</strong> today.
+              {isLive ? ' Wait time is calculated from live queue data + ML predicted consultation durations.' : ' Showing estimated data — connect to queue server for live predictions.'}
             </p>
             <div style={{ marginTop: '1rem', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {['Queue moving', 'No delays', 'Low no-show risk'].map(tag => (
-                <span key={tag} className="badge badge-muted">{tag}</span>
-              ))}
+              {stats.waiting > 0 && <span className="badge badge-muted">{stats.waiting} waiting</span>}
+              {stats.inProgress > 0 && <span className="badge badge-green">{stats.inProgress} in session</span>}
+              {highRiskCount > 0 && <span className="badge badge-red">{highRiskCount} high-risk</span>}
+              {highRiskCount === 0 && <span className="badge badge-green">Low no-show risk</span>}
             </div>
           </Card3D>
         </div>
@@ -237,9 +253,9 @@ export default function Dashboard() {
 
       {/* ── Stats Row ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginTop: '1.25rem' }}>
-        <StatCard label="Total Appointments" value="13" unit="" icon={Calendar} delay={0} />
-        <StatCard label="Avg Wait Time" value="18" unit="min" icon={Clock} color="var(--red)" delay={0.05} />
-        <StatCard label="Completed" value="11" unit="" icon={CheckCircle2} delay={0.1} />
+        <StatCard label="Total in Queue" value={String(stats.total || 13)} unit="" icon={Calendar} delay={0} />
+        <StatCard label="Avg Wait Time" value={String(waitTime || 18)} unit="min" icon={Clock} color="var(--red)" delay={0.05} />
+        <StatCard label="Completed Today" value={String(stats.done || 11)} unit="" icon={CheckCircle2} delay={0.1} />
         <StatCard label="Health Score" value="84" unit="/100" icon={Heart} color="#f0a500" delay={0.15} />
       </div>
 
@@ -323,5 +339,4 @@ export default function Dashboard() {
   );
 }
 
-// Need Calendar import fix
-function Calendar(props) { return <svg xmlns="http://www.w3.org/2000/svg" width={props.size} height={props.size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>; }
+
