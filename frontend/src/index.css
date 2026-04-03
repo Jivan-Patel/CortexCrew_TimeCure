@@ -4,43 +4,65 @@
 
 @layer base {
   body {
-    @apply bg-darker text-slate-200 overflow-x-hidden;
+    /* Base default is Light Mode */
+    @apply bg-light text-slate-800 overflow-x-hidden transition-colors duration-300;
     font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  }
+  
+  /* Dark mode global styles */
+  .dark body {
+    @apply bg-darker text-slate-200;
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-glass-bg border border-glass-border backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)];
+    @apply bg-glass-bg border border-glass-border backdrop-blur-xl shadow-[0_4px_20px_rgb(0,0,0,0.05)] rounded-2xl;
+  }
+  
+  .dark .glass-panel {
+    @apply bg-glass-bg-dark border-glass-border-dark shadow-[0_8px_30px_rgb(0,0,0,0.12)];
   }
   
   .glass-input {
-    @apply w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300;
+    @apply w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-800;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300;
+  }
+
+  .dark .glass-input {
+    @apply bg-slate-900/60 border-slate-700/80 text-slate-200;
   }
   
   .btn-primary {
-    @apply bg-gradient-to-r from-primary to-secondary text-white font-medium rounded-xl px-6 py-3 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-all duration-300 transform hover:-translate-y-0.5;
+    @apply bg-primary text-white font-medium rounded-xl px-6 py-3;
+    @apply shadow-md hover:shadow-lg hover:bg-secondary transition-all duration-300 transform hover:-translate-y-0.5;
   }
 
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-neon-blue;
-  }
+  /* No neon glow, just solid stable hospital tones */
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-darker;
+  @apply bg-transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-700 rounded-full;
+  @apply bg-slate-300 rounded-full;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-slate-700;
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
   @apply bg-slate-600;
 }
