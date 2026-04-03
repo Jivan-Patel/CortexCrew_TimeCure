@@ -1,98 +1,99 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Clock, CheckCircle2, Activity, User } from 'lucide-react';
+import { Play, Check, X, Clock } from 'lucide-react';
 
-const queueData = [
-  { id: 1, name: 'Emma Watson', time: '10:00 AM', status: 'In Consultation', doc: 'Dr. Sarah', progress: 65, waitTime: '0 mins' },
-  { id: 2, name: 'James Smith', time: '10:30 AM', status: 'Waiting', doc: 'Dr. Sarah', progress: 100, waitTime: '12 mins' },
-  { id: 3, name: 'Olivia Brown', time: '11:00 AM', status: 'Waiting', doc: 'Dr. John', progress: 100, waitTime: '45 mins' },
-  { id: 4, name: 'William Jones', time: '09:30 AM', status: 'Completed', doc: 'Dr. Emily', progress: 100, waitTime: '0 mins' },
-];
-
-const QueuePanel = () => {
+const QueuePanel = ({ queue, onUpdateStatus }) => {
+  
+  // Filter out 'done' and 'no-show' from primary view or keep them? Keep them to show historical.
+  
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.1 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
-      className="glass-panel p-6 flex flex-col h-full overflow-hidden"
-    >
+    <div className="expert-panel p-6 flex flex-col h-full min-h-[500px]">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Real-time Queue</h3>
-        <span className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-xs font-semibold">12 Waiting</span>
+        <div>
+           <h3 className="text-lg font-bold text-slate-900">Live Active Queue</h3>
+           <p className="text-xs text-slate-500 font-medium">Real-time status synced with backend endpoints</p>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
-        {queueData.map((patient, idx) => {
+      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+        {queue.length === 0 && <p className="text-sm text-slate-500 text-center py-8">No patients in queue.</p>}
+        {queue.map((patient) => {
           
-          let statusColor = '';
-          let StatusIcon = Clock;
-          let ringColor = '';
-          
-          if (patient.status === 'In Consultation') {
-            statusColor = 'text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:border-blue-900/50';
-            ringColor = 'ring-1 ring-blue-500/50 dark:ring-blue-400/50';
-            StatusIcon = Activity;
-          } else if (patient.status === 'Waiting') {
-            statusColor = 'text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-500 dark:bg-amber-500/20 dark:border-amber-500/30';
-            StatusIcon = Clock;
-          } else {
-            statusColor = 'text-primary bg-primary/10 border-primary/20';
-            StatusIcon = CheckCircle2;
-          }
+          let rowClass = "border-slate-200 bg-white";
+          if (patient.status === 'in-progress') rowClass = "border-blue-300 bg-blue-50/50 shadow-sm";
+          if (patient.status === 'no-show' || patient.status === 'done') rowClass = "border-slate-100 bg-slate-50 opacity-60";
 
           return (
-            <motion.div 
-              key={patient.id}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 + (idx * 0.1) }}
-              className={`p-4 rounded-xl border bg-white dark:bg-slate-800/40 relative overflow-hidden group transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${patient.status === 'In Consultation' ? ringColor : 'border-slate-200 dark:border-slate-700'}`}
-            >
-              <div className="flex items-center justify-between mb-3 relative z-10 w-full">
-                <div className="flex items-center gap-3 pr-2 overflow-hidden w-[60%]">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center shrink-0">
-                    <User className="text-slate-500 dark:text-slate-400 w-5 h-5" />
+            <div key={patient.id} className={`p-4 rounded-xl border flex flex-col gap-3 transition-all duration-300 ${rowClass}`}>
+              
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0
+                      ${patient.type === 'walk-in' ? 'bg-amber-100 text-amber-700' : 'bg-primary/10 text-primary'}`}>
+                    {patient.name.charAt(0)}
                   </div>
-                  <div className="min-w-0">
-                    <h4 className="text-sm font-semibold text-slate-800 dark:text-white truncate">{patient.name}</h4>
-                    <p className="text-[11px] sm:text-xs text-slate-500 truncate">w/ {patient.doc} • {patient.time}</p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-slate-900 text-sm">{patient.name}</h4>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                        {patient.type}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4 mt-1">
+                      <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                        Wait: <span className="text-slate-700">{patient.waitTime}m</span>
+                      </span>
+                      <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                        Dur: <span className="text-slate-700">{patient.predictedTime}m</span>
+                      </span>
+                      {patient.noShowProb > 0 && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${patient.noShowProb > 0.4 ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-500'}`}>
+                          No-Show Risk: {Math.round(patient.noShowProb * 100)}%
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border shrink-0 ${statusColor}`}>
-                  <StatusIcon className="w-3.5 h-3.5" />
-                  <span className="text-[10px] sm:text-xs font-semibold">{patient.status}</span>
+
+                <div className="shrink-0 flex items-center gap-2">
+                  <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border
+                    ${patient.status === 'in-progress' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                      patient.status === 'arrived' ? 'bg-green-100 text-green-700 border-green-200' :
+                      patient.status === 'no-show' || patient.status === 'done' ? 'bg-slate-200 text-slate-600 border-slate-300' :
+                      'bg-amber-100 text-amber-700 border-amber-200'
+                    }`}>
+                    {patient.status}
+                  </span>
                 </div>
               </div>
 
-              {/* Progress bar for Consultation */}
-              {patient.status === 'In Consultation' && (
-                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full mt-2 overflow-hidden relative z-10">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${patient.progress}%` }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1, delay: 0.4 }}
-                    className="h-full bg-blue-500 rounded-full relative"
-                  >
-                    <div className="absolute top-0 right-0 bottom-0 left-0 bg-white/20 animate-pulse"></div>
-                  </motion.div>
+              {/* Action Buttons purely for mockup flow matching Readme */}
+              {(patient.status === 'waiting' || patient.status === 'arrived') && (
+                <div className="flex gap-2 pt-2 border-t border-slate-100 mt-1">
+                  <button onClick={() => onUpdateStatus(patient.id, 'in-progress')} className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-xs font-semibold transition-colors">
+                    <Play className="w-3 h-3" /> Start
+                  </button>
+                  <button onClick={() => onUpdateStatus(patient.id, 'late')} className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-md text-xs font-semibold transition-colors border border-slate-200">
+                    <Clock className="w-3 h-3" /> Late
+                  </button>
+                  <button onClick={() => onUpdateStatus(patient.id, 'no-show')} className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-md text-xs font-semibold transition-colors ml-auto">
+                    <X className="w-3 h-3" /> Mark No-Show
+                  </button>
                 </div>
               )}
 
-              {/* Wait time indicator */}
-              {patient.status === 'Waiting' && (
-                <p className="text-xs text-amber-600 dark:text-amber-500/80 mt-2 text-right relative z-10 font-medium">
-                  Est. Wait: {patient.waitTime}
-                </p>
+              {patient.status === 'in-progress' && (
+                <div className="flex gap-2 pt-2 border-t border-blue-100 mt-1">
+                  <button onClick={() => onUpdateStatus(patient.id, 'done')} className="flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white hover:bg-green-600 rounded-md text-xs font-semibold transition-colors">
+                    <Check className="w-3 h-3" /> Conclude Consultation
+                  </button>
+                </div>
               )}
-            </motion.div>
+
+            </div>
           )
         })}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
