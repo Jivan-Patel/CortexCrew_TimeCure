@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import {sendEmail} from "../servieces/email.service.js";
 
 const accountSchema = new mongoose.Schema({
   name: {
@@ -14,13 +15,9 @@ const accountSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  role: {
-    type: String,
-    enum: ["patient", "receptionist", "doctor"],
-    default: "patient"
-  },
-  phone: {
-    type: String
+  verified:{
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 

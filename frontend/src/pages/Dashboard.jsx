@@ -1,130 +1,152 @@
-import React, { useState } from 'react';
-import { Network, Search } from 'lucide-react';
-import Sidebar from '../components/Sidebar';
-import Navbar from '../components/Navbar';
-import StatsCard from '../components/StatsCard';
-import AppointmentPanel from '../components/AppointmentPanel';
-import QueuePanel from '../components/QueuePanel';
-import WalkInModal from '../components/WalkInModal';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import authAPI from '../api/auth';
+import './Dashboard.css';
 
-const initialQueue = [
-  { id: 1, name: 'Emma Watson', type: 'booked', status: 'in-progress', noShowProb: 0.05, predictedTime: 15, waitTime: 0 },
-  { id: 2, name: 'James Smith', type: 'walk-in', status: 'arrived', noShowProb: 0.12, predictedTime: 12, waitTime: 15 },
-  { id: 3, name: 'Olivia Brown', type: 'booked', status: 'waiting', noShowProb: 0.75, predictedTime: 20, waitTime: 27 },
-];
+export const Dashboard = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-const Dashboard = () => {
-  const [queue, setQueue] = useState(initialQueue);
-  const [isWalkInOpen, setIsWalkInOpen] = useState(false);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
 
-  // Stats computation based on active Queue state
-  const arrivedCnt = queue.filter(p => p.status === 'arrived' || p.status === 'waiting').length;
-  const inProgressCnt = queue.filter(p => p.status === 'in-progress').length;
-  const totalCnt = queue.length;
-
-  const handleWalkIn = (patientData) => {
-    // Generate simple mock ID and place immediately after 'in-progress' or at position 1
-    const newPatient = {
-      id: Date.now(),
-      name: patientData.name || 'Unknown Patient',
-      type: 'walk-in',
-      status: 'arrived',
-      noShowProb: Math.random() * 0.2, // low prob for walk ins
-      predictedTime: Math.floor(Math.random() * 15) + 5,
-      waitTime: Math.floor(Math.random() * 10) + 5
+        const response = await authAPI.getMe();
+        setUser(response.user);
+      } catch (err) {
+        setError('Failed to load user data');
+        localStorage.removeItem('token');
+        navigate('/login');
+      } finally {
+        setLoading(false);
+      }
     };
-    
-    // Insert at start of waiting queue
-    setQueue(prev => {
-      const q = [...prev];
-      let insertIndex = q.findIndex(p => p.status !== 'in-progress');
-      if (insertIndex === -1) insertIndex = q.length;
-      q.splice(insertIndex, 0, newPatient);
-      return q;
-    });
-    setIsWalkInOpen(false);
+
+    fetchUserData();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await authAPI.logout();
+    navigate('/login');
   };
 
-  const handleBook = (patientData) => {
-    // End of queue booking
-    const newPatient = {
-      id: Date.now(),
-      name: patientData.name || 'New Booking',
-      type: 'booked',
-      status: 'waiting',
-      noShowProb: patientData.mockNoShow,
-      predictedTime: patientData.mockTime,
-      waitTime: queue.reduce((acc, p) => acc + p.predictedTime, 0)
-    };
-    setQueue(prev => [...prev, newPatient]);
-  };
+  if (loading) {
+    return (
+      <div className="dashboard-container">
+        <div className="loading">Loading...</div>
+      </div>
+    );
+  }
 
-  const updatePatientStatus = (id, newStatus) => {
-    if (newStatus === 'late') {
-       // Move to back
-       setQueue(prev => {
-         const patientIndex = prev.findIndex(p => p.id === id);
-         if (patientIndex === -1) return prev;
-         const p = prev[patientIndex];
-         p.status = 'waiting';
-         const q = prev.filter(x => x.id !== id);
-         // Insert after current (mocking late reinsertion logic)
-         q.splice(1, 0, p);
-         return q;
-       });
-       return;
-    }
+  if (error) {
+    return (
+      <div className="dashboard-container">
+        <div className="error">{error}</div>
+      </div>
+    );
+  }
 
-    setQueue(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
-  };
+  const userRole = user?.username ? 'patient' : user?.role;
+  const isDoctor = userRole === 'doctor';
 
   return (
-    <div className="flex h-screen bg-light-bg overflow-hidden font-sans">
-      <Sidebar />
-      <div className="flex-1 flex flex-col relative overflow-hidden">
-        
-        <Navbar />
-        
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-8 scroll-smooth z-10 custom-scrollbar">
-          <div className="flex flex-col gap-6 max-w-[1600px] mx-auto pb-8">
-            
-            {/* Header / Actions */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">Hospital Operations Control</h1>
-                <p className="text-sm text-slate-500 flex items-center gap-2 mt-1">
-                  <Network className="w-4 h-4 text-primary" />
-                  ML Event-Driven Architecture Active
-                </p>
-              </div>
-              <button onClick={() => setIsWalkInOpen(true)} className="btn-primary">
-                + Register Walk-In
-              </button>
-            </div>
+    <div className="dashboard-container">
+      <nav className="navbar">
+        <div className="navbar-brand">
+          <h1>🏥 TimeCure</h1>
+        </div>
+        <div className="navbar-user">
+          <span className="user-name">{user?.username}</span>
+          <span className={`role-badge ${isDoctor ? 'doctor' : 'patient'}`}>
+            {isDoctor ? '👨‍⚕️ Doctor' : '👤 Patient'}
+          </span>
+          <button onClick={handleLogout} className="logout-btn">
+            Logout
+          </button>
+        </div>
+      </nav>
 
-            {/* STATS */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-               <StatsCard title="Total Assigned" value={totalCnt} />
-               <StatsCard title="Arrived / Waiting" value={arrivedCnt} />
-               <StatsCard title="Currently Consulting" value={inProgressCnt} />
-            </div>
+      <div className="dashboard-content">
+        <div className="welcome-section">
+          <h2>Welcome, {user?.username}! 👋</h2>
+          <p>
+            {isDoctor
+              ? 'Welcome to your doctor dashboard'
+              : 'Welcome to your patient dashboard'}
+          </p>
+        </div>
 
-            {/* PANELS */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-              
-
-              <div className="xl:col-span-2 flex flex-col gap-6">
-                <QueuePanel queue={queue} onUpdateStatus={updatePatientStatus} />
+        <div className="dashboard-cards">
+          {isDoctor ? (
+            <>
+              <div className="card">
+                <div className="card-icon">📋</div>
+                <h3>My Appointments</h3>
+                <p>View and manage your appointments</p>
+                <button className="card-btn">View Appointments</button>
               </div>
 
-            </div>
-          </div>
-        </main>
+              <div className="card">
+                <div className="card-icon">👥</div>
+                <h3>My Patients</h3>
+                <p>Manage your patient list</p>
+                <button className="card-btn">View Patients</button>
+              </div>
+
+              <div className="card">
+                <div className="card-icon">📊</div>
+                <h3>Reports</h3>
+                <p>View your activity reports</p>
+                <button className="card-btn">View Reports</button>
+              </div>
+
+              <div className="card">
+                <div className="card-icon">⚙️</div>
+                <h3>Profile Settings</h3>
+                <p>Update your profile information</p>
+                <button className="card-btn">Edit Profile</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="card">
+                <div className="card-icon">🏥</div>
+                <h3>Find Doctor</h3>
+                <p>Search and book appointments with doctors</p>
+                <button className="card-btn">Find Doctor</button>
+              </div>
+
+              <div className="card">
+                <div className="card-icon">📅</div>
+                <h3>My Appointments</h3>
+                <p>View your scheduled appointments</p>
+                <button className="card-btn">View Appointments</button>
+              </div>
+
+              <div className="card">
+                <div className="card-icon">📋</div>
+                <h3>Medical History</h3>
+                <p>Access your medical records</p>
+                <button className="card-btn">View History</button>
+              </div>
+
+              <div className="card">
+                <div className="card-icon">⚙️</div>
+                <h3>Profile Settings</h3>
+                <p>Update your profile information</p>
+                <button className="card-btn">Edit Profile</button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-
-      {isWalkInOpen && <WalkInModal onClose={() => setIsWalkInOpen(false)} onAdd={handleWalkIn} />}
     </div>
   );
 };
-
-export default Dashboard;

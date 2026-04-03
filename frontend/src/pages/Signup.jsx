@@ -1,123 +1,215 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User } from 'lucide-react';
-import Logo from '../components/Logo';
+import { RoleSelector } from '../components/RoleSelector';
+import authAPI from '../api/auth';
+import './Auth.css';
 
-const Signup = () => {
+export const Signup = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'patient',
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showOtpForm, setShowOtpForm] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
-  const handleRegister = async (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleRoleChange = (role) => {
+    setFormData((prev) => ({
+      ...prev,
+      role,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    
+    setError('');
+
+    // Validation
+    if (!formData.username || !formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: name, email, password })
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-      
+      const response = await authAPI.register(
+        formData.username,
+        formData.email,
+        formData.password,
+        formData.role
+      );
+
+      setRegisteredEmail(formData.email);
+      setShowOtpForm(true);
+      // Auto-focus to OTP input
       setTimeout(() => {
-        setIsLoading(false);
-        navigate('/login');
-      }, 1000);
+        document.getElementById('otpInput')?.focus();
+      }, 0);
     } catch (err) {
-      setIsLoading(false);
-      alert(err.message);
+      setError(err.message || 'Registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-light-bg flex flex-col justify-center items-center p-6">
-        
-      <div className="flex flex-col items-center mb-8">
-        <Logo className="w-14 h-14 mb-4 shadow-sm" />
-        <h1 className="text-3xl font-extrabold text-slate-900 text-center tracking-tight">Smart Scheduling</h1>
-      </div>
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
 
-      <div className="w-full max-w-[420px] expert-panel p-8 sm:p-10 relative">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-primary rounded-t-xl"></div>
-        
-        <div className="mb-8">
-          <h2 className="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">Create Account</h2>
-          <p className="text-sm font-medium text-slate-500">Join the TimeCure HealthTech platform</p>
+    if (!otp) {
+      setError('Please enter the OTP');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authAPI.verifyEmail(registeredEmail, otp);
+      navigate('/login');
+    } catch (err) {
+      setError(err.message || 'OTP verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (showOtpForm) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <h2>Verify Email</h2>
+          <p className="email-text">
+            We've sent a verification code to <strong>{registeredEmail}</strong>
+          </p>
+
+          <form onSubmit={handleOtpSubmit}>
+            <div className="form-group">
+              <input
+                id="otpInput"
+                type="text"
+                placeholder="Enter OTP (6 digits)"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                maxLength="6"
+              />
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            <button type="submit" className="submit-btn" disabled={loading}>
+              {loading ? 'Verifying...' : 'Verify Email'}
+            </button>
+          </form>
+
+          <p className="switch-auth">
+            Didn't receive code?{' '}
+            <button
+              type="button"
+              onClick={() => setShowOtpForm(false)}
+              className="link-btn"
+            >
+              Go back
+            </button>
+          </p>
         </div>
+      </div>
+    );
+  }
 
-        <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 ml-1 uppercase tracking-wide">Full Name</label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" />
-              <input 
-                type="text" 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="glass-input pl-11 h-12" 
-                placeholder="Dr. Sarah Connor"
-                required
-              />
-            </div>
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Create Your Account</h2>
+        <p className="subtitle">Join TimeCure - Bridging Care and Time</p>
+
+        <form onSubmit={handleSubmit}>
+          <RoleSelector
+            selectedRole={formData.role}
+            onRoleChange={handleRoleChange}
+          />
+
+          <div className="form-group">
+            <label>Full Name</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Enter your full name"
+            />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 ml-1 uppercase tracking-wide">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" />
-              <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="glass-input pl-11 h-12" 
-                placeholder="admin@timecure.io"
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label>Email Address</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+            />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 ml-1 uppercase tracking-wide">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" />
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="glass-input pl-11 h-12" 
-                placeholder="••••••••"
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Create a strong password"
+            />
           </div>
 
-          <button 
-            type="submit" 
-            disabled={isLoading}
-            className="btn-primary w-full mt-6 h-12"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            ) : (
-              "Register Account"
-            )}
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Confirm your password"
+            />
+          </div>
+
+          {error && <div className="error-message">{error}</div>}
+
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
 
-        <p className="text-center text-sm font-medium text-slate-600 mt-8 pt-6 border-t border-slate-100">
-          Already have an account? <Link to="/login" className="text-primary hover:underline font-bold">Sign In</Link>
+        <p className="switch-auth">
+          Already have an account?{' '}
+          <Link to="/login" className="auth-link">
+            Login
+          </Link>
         </p>
       </div>
     </div>
   );
 };
-
-export default Signup;

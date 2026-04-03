@@ -1,7 +1,6 @@
 import express from "express";
 import morgan from "morgan";
 import authRouter from "./routes/auth.routes.js";
-import appointmentRouter from "./routes/appointment.routes.js";
 import cookieParser from "cookie-parser"
 
 const app = express();
@@ -21,8 +20,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/auth", authRouter);
-app.use("/api/book", appointmentRouter);
+app.use("/api/auth", authRouter)
 
 // Error handling middleware - MUST be last
 app.use((err, req, res, next) => {

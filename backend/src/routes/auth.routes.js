@@ -14,5 +14,6 @@ authRouter.get("/get-me", asyncHandler(authController.getMe))
 authRouter.get("/refresh-token", asyncHandler(authController.refreshToken))
 authRouter.get("/logout", asyncHandler(authController.logOut))
 authRouter.get("/logout-all", asyncHandler(authController.logOutAll))
+authRouter.post("/verify-email", asyncHandler(authController.verifyEmail))
 
 export default authRouter;  
