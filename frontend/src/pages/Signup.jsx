@@ -10,13 +10,31 @@ const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
+    
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: name, email, password })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+      
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('/login');
+      }, 1000);
+    } catch (err) {
       setIsLoading(false);
-      navigate('/login');
-    }, 1500);
+      alert(err.message);
+    }
   };
 
   return (

@@ -8,14 +8,34 @@ const Signin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
+    setErrorMsg('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+      
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('/dashboard');
+      }, 1000);
+    } catch (err) {
       setIsLoading(false);
-      navigate('/dashboard');
-    }, 1500);
+      setErrorMsg(err.message);
+    }
   };
 
   return (
@@ -60,6 +80,12 @@ const Signin = () => {
             <h2 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Sign In</h2>
             <p className="text-sm font-medium text-slate-500">Access your administrative dashboard.</p>
           </div>
+
+          {errorMsg && (
+            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center">
+              {errorMsg}
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-1.5">
