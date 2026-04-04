@@ -31,7 +31,8 @@ export const bookAppointment = async (req, res) => {
 
         // 3. Forward to ML API
         try {
-            const mlResponse = await fetch("http://localhost:5000/predict", {
+            const ML_URL = process.env.ML_API_URL || 'https://cortexcrew-timecure.onrender.com/predict';
+            const mlResponse = await fetch(ML_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(mlPayload)

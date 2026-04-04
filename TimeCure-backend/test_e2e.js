@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = "http://localhost:4000"; // Backend URL
+const BASE_URL = "https://cortexcrew-timecure-1.onrender.com"; // TimeCure-backend (Live)
 const MY_PHONE = "+918849839615"; // The user's requested phone number
 
 async function testFullFlow() {
@@ -14,13 +14,13 @@ async function testFullFlow() {
         const bookPayload = {
             name: "Jivan Patel",
             phone: MY_PHONE,
-            Age: 25, 
-            Gender: 1, 
-            Hipertension: 0, 
-            Diabetes: 0, 
+            Age: 25,
+            Gender: 1,
+            Hipertension: 0,
+            Diabetes: 0,
             Alcoholism: 1, // Features chosen to increase no-show prob
-            Handcap: 0, 
-            Scholarship: 1 
+            Handcap: 0,
+            Scholarship: 1
         };
 
         let res = await axios.post(`${BASE_URL}/book`, bookPayload);
@@ -30,7 +30,7 @@ async function testFullFlow() {
         console.log(`   Initial No-Show Risk: ${res.data.patient.noShowProb}`);
         console.log(`   Initial SMS Strategy: ${res.data.patient.smsStrategy}`);
         console.log(`   Current Queue Status: ${res.data.patient.status}`);
-        
+
         console.log("\n----------------------------------------------------");
 
         // 2. CHECK QUEUE BEFORE SMS
@@ -43,10 +43,10 @@ async function testFullFlow() {
 
         // 3. TRIGGER MANUAL SMS VIA TWILIO (to simulate the automated cron job)
         console.log(`⏳ 3. Triggering SMS for Patient ID ${patientId}... (Backend will text and call ML again)`);
-        
+
         // We will hit the manual trigger endpoint we built into server.js
         res = await axios.post(`${BASE_URL}/trigger-sms/${patientId}`, { type: "urgent" });
-        
+
         console.log("✅ SMS Trigger Response:");
         console.log(`   Message: ${res.data.message}`);
         console.log(`   NEW Updated No-Show Risk: ${res.data.updatedPatient.noShowProb}`);
@@ -61,8 +61,8 @@ async function testFullFlow() {
         if (err.response) {
             console.error(err.response.data);
         } else {
-             console.error(err.message);
-             console.error("Make sure Python ML (port 5000) and Node Backend (port 4000) are both running!");
+            console.error(err.message);
+            console.error("Make sure Python ML (port 5000) and Node Backend (port 4000) are both running!");
         }
     }
 }

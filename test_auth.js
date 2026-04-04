@@ -4,7 +4,7 @@ async function test() {
   
   console.log('--- Registering ---');
   try {
-    const res = await fetch('http://localhost:3000/api/auth/register', {
+    const res = await fetch('https://cortexcrew-timecure-2.onrender.com/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: "tester", email, password })
@@ -18,7 +18,7 @@ async function test() {
 
   console.log('\n--- Logging In ---');
   try {
-    const res = await fetch('http://localhost:3000/api/auth/login', {
+    const res = await fetch('https://cortexcrew-timecure-2.onrender.com/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })

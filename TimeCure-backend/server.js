@@ -14,7 +14,7 @@ app.use(express.json());
 
 // Load Environment Variables
 const PORT = process.env.PORT || 4000;
-const ML_API_URL = process.env.ML_API_URL || 'http://localhost:5000/predict';
+const ML_API_URL = process.env.ML_API_URL || 'https://cortexcrew-timecure.onrender.com/predict';
 const MONGO_URI = process.env.MONGO_URI;
 
 // 🗄️ Connect to Database
@@ -261,6 +261,6 @@ app.post("/trigger-sms/:id", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 TimeCure Backend Database Server running on http://localhost:${PORT}`);
+    console.log(`🚀 TimeCure Backend Database Server running on port ${PORT} (Live: https://cortexcrew-timecure-1.onrender.com)`);
     console.log(`🔌 ML target pointing to: ${ML_API_URL}`);
 });

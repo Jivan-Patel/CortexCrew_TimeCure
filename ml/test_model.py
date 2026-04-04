@@ -14,7 +14,7 @@ import json
 import urllib.request
 import urllib.error
 
-BASE_URL = "http://localhost:5000"
+BASE_URL = "https://cortexcrew-timecure.onrender.com"
 
 def call_predict(patient_data: dict) -> dict:
     body = json.dumps(patient_data).encode("utf-8")

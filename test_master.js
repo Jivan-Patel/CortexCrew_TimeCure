@@ -1,8 +1,8 @@
 const axios = require('axios'); // Requires axios (npm install axios)
 
 // Endpoints
-const AUTH_URL = "http://localhost:3000/api/auth";
-const QUEUE_URL = "http://localhost:4000";
+const AUTH_URL = "https://cortexcrew-timecure-2.onrender.com/api/auth";  // backend (auth)
+const QUEUE_URL = "https://cortexcrew-timecure-1.onrender.com";          // TimeCure-backend (queue)
 const MY_PHONE = "+918849839615"; // Twilio destination
 
 console.log("=======================================================================");

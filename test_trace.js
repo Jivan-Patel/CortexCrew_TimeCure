@@ -2,14 +2,14 @@ async function extractError() {
   const email = `test_9999@example.com`;
   
   // Register first to ensure account exists
-  await fetch('http://localhost:3000/api/auth/register', {
+  await fetch('https://cortexcrew-timecure-2.onrender.com/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: "tester", email, password: "password123" })
   });
 
   // Login that crashes
-  const res = await fetch('http://localhost:3000/api/auth/login', {
+  const res = await fetch('https://cortexcrew-timecure-2.onrender.com/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password: "password123" })
