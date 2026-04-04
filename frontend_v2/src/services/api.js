@@ -34,8 +34,27 @@ export const queueService = {
       return res.data;
     } catch { return []; } 
   },
-  start: async (id) => axios.post(`${QUEUE_BASE_URL}/start/${id}`),
-  end: async (id) => axios.post(`${QUEUE_BASE_URL}/end/${id}`),
-  noShow: async (id) => axios.post(`${QUEUE_BASE_URL}/no-show/${id}`),
-  triggerSms: async (id, type = 'normal') => axios.post(`${QUEUE_BASE_URL}/trigger-sms/${id}`, { type })
+  start:      async (id) => axios.post(`${QUEUE_BASE_URL}/start/${id}`),
+  end:        async (id) => axios.post(`${QUEUE_BASE_URL}/end/${id}`),
+  noShow:     async (id) => axios.post(`${QUEUE_BASE_URL}/no-show/${id}`),
+  triggerSms: async (id, type = 'normal') => axios.post(`${QUEUE_BASE_URL}/trigger-sms/${id}`, { type }),
+
+  // ── Rescheduling ──────────────────────────────────────────────────────
+  // Move a patient to a new date/time slot
+  reschedule: async (id, newDate, reason = '') =>
+    axios.post(`${QUEUE_BASE_URL}/reschedule/${id}`, { newDate, reason }),
+
+  // Get single patient record (for pre-filling the reschedule modal)
+  getPatient: async (id) => {
+    const res = await axios.get(`${QUEUE_BASE_URL}/patient/${id}`);
+    return res.data;
+  },
+
+  // Get queue for a specific future date (doctor's upcoming schedule)
+  getQueueByDate: async (date) => {
+    try {
+      const res = await axios.get(`${QUEUE_BASE_URL}/queue/date`, { params: { date } });
+      return res.data;
+    } catch { return []; }
+  },
 };

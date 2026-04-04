@@ -4,7 +4,7 @@ import {
   Activity, Clock, LogOut, CheckCircle, BrainCircuit, ScanLine, Play, FastForward,
   UserMinus, Users, Timer, AlertTriangle, TrendingDown, Bell, Zap, BarChart3,
   Wifi, ChevronRight, ArrowRight, RefreshCw, MessageSquare, Check, X, PhoneCall,
-  Eye, Calendar, Filter, Info, Stethoscope, Heart, Shield
+  Eye, Calendar, Filter, Info, Stethoscope, Heart, Shield, CalendarClock, ChevronDown
 } from 'lucide-react';
 import { queueService } from '../services/api';
 
@@ -17,13 +17,148 @@ function getRisk(prob) {
 
 function getStatusStyle(status) {
   const map = {
-    'waiting': 'status-waiting',
-    'arrived': 'status-arrived',
-    'in-progress': 'status-in-progress',
-    'done': 'status-done',
-    'no-show': 'status-no-show',
+    'waiting':      'status-waiting',
+    'arrived':      'status-arrived',
+    'in-progress':  'status-in-progress',
+    'done':         'status-done',
+    'no-show':      'status-no-show',
+    'rescheduled':  'status-rescheduled',
   };
   return map[status] || 'status-waiting';
+}
+
+// ─── FORMAT DATE HELPER ────────────────────────────────────────────────────────
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('en-US', {
+    month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+// ─── RESCHEDULE MODAL ─────────────────────────────────────────────────────────
+function RescheduleModal({ patient, onClose, onSubmit, loading, error }) {
+  const minDate = new Date(Date.now() + 5 * 60 * 1000).toISOString().slice(0, 16);
+  const maxDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+  const [date, setDate] = useState('');
+  const [reason, setReason] = useState('');
+  const [localErr, setLocalErr] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLocalErr('');
+    if (!date) { setLocalErr('Please select a new date and time.'); return; }
+    if (new Date(date) < new Date(Date.now() + 5 * 60 * 1000)) {
+      setLocalErr('New date must be at least 5 minutes in the future.'); return;
+    }
+    onSubmit(patient.id || patient._id, date, reason);
+  };
+
+  const remainingReschedules = 3 - (patient.rescheduleCount || 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+         style={{ background: 'rgba(5,10,26,0.85)', backdropFilter: 'blur(8px)' }}>
+      <div className="glass-card p-8 w-full max-w-md anim-fade-in" style={{ border: '1px solid rgba(245,158,11,0.3)' }}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                 style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)' }}>
+              <CalendarClock className="w-5 h-5 text-yellow-400" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black text-white">Reschedule Appointment</h2>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest">{patient.name}</p>
+            </div>
+          </div>
+          <button onClick={onClose}
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-all">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Reschedule count warning */}
+        {remainingReschedules <= 1 && remainingReschedules > 0 && (
+          <div className="rounded-xl px-4 py-3 mb-5 flex items-start gap-2"
+               style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)' }}>
+            <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-yellow-300">
+              <strong>Warning:</strong> Only {remainingReschedules} reschedule attempt{remainingReschedules === 1 ? '' : 's'} remaining for this patient.
+            </p>
+          </div>
+        )}
+
+        {/* Current info */}
+        <div className="flex gap-3 mb-5">
+          <div className="flex-1 rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Current Status</p>
+            <span className={`status-pill ${getStatusStyle(patient.status)}`}>{patient.status}</span>
+          </div>
+          <div className="flex-1 rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Reschedules Used</p>
+            <p className="text-lg font-black text-white">{patient.rescheduleCount || 0}<span className="text-xs text-slate-500">/3</span></p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* New date picker */}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">
+              New Date &amp; Time <span className="text-yellow-400">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              className="glass-input"
+              min={minDate}
+              max={maxDate}
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Reason */}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">
+              Reason <span className="text-slate-600">(Optional · max 200 chars)</span>
+            </label>
+            <textarea
+              className="glass-input resize-none"
+              rows={3}
+              maxLength={200}
+              placeholder="e.g. Doctor unavailable, patient request..."
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+            />
+            <p className="text-[10px] text-slate-600 text-right">{reason.length}/200</p>
+          </div>
+
+          {/* Inline errors */}
+          {(localErr || error) && (
+            <div className="rounded-xl px-4 py-3 flex items-start gap-2"
+                 style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}>
+              <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-400">{localErr || error}</p>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="btn-outline flex-1">
+              Cancel
+            </button>
+            <button type="submit" disabled={loading} className="btn-warning flex-1"
+                    style={{ opacity: loading ? 0.7 : 1 }}>
+              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarClock className="w-4 h-4" />}
+              {loading ? 'Saving...' : 'Confirm Reschedule'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function getInsight(prob) {
@@ -229,9 +364,9 @@ function PatientCard({ patient, queueIndex, onAction, isDoc, sendingSms }) {
                     <UserMinus className="w-3.5 h-3.5" />
                     No-Show
                   </button>
-                  <button onClick={() => onAction(patient.id, 'late')} className="btn-warning flex-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    Late
+                  <button onClick={() => onAction(patient.id || patient._id, 'reschedule')} className="btn-warning flex-1">
+                    <CalendarClock className="w-3.5 h-3.5" />
+                    Reschedule
                   </button>
                 </>
               )}
@@ -239,6 +374,12 @@ function PatientCard({ patient, queueIndex, onAction, isDoc, sendingSms }) {
                 <button onClick={() => onAction(patient.id || patient._id, 'end')} className="btn-danger w-full">
                   <FastForward className="w-3.5 h-3.5" />
                   End Consultation
+                </button>
+              )}
+              {patient.status === 'no-show' && (
+                <button onClick={() => onAction(patient.id || patient._id, 'reschedule')} className="btn-warning w-full">
+                  <CalendarClock className="w-3.5 h-3.5" />
+                  Reschedule No-Show
                 </button>
               )}
             </div>
@@ -302,16 +443,24 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [queue, setQueue] = useState([]);
   const [completedPatients, setCompletedPatients] = useState([]);
+  const [rescheduledPatients, setRescheduledPatients] = useState([]);
+  const [showRescheduledPanel, setShowRescheduledPanel] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
   const [lastSync, setLastSync] = useState(new Date());
   const [syncing, setSyncing] = useState(false);
-  const [sendingSms, setSendingSms] = useState(new Set()); // Track IDs currently sending
-  const sentThisSession = React.useRef(new Set()); // Avoid duplicates in current session
+  const [sendingSms, setSendingSms] = useState(new Set());
+  const sentThisSession = React.useRef(new Set());
+
+  // Reschedule modal state
+  const [rescheduleModal, setRescheduleModal] = useState(null);
+  const [rescheduling, setRescheduling] = useState(false);
+  const [rescheduleError, setRescheduleError] = useState('');
 
   // Patient form state
   const [formData, setFormData] = useState({
     name: '', phone: '', Age: 30, Gender: 1,
-    Hipertension: false, Diabetes: false, Alcoholism: false, Handcap: false, Scholarship: false
+    Hipertension: false, Diabetes: false, Alcoholism: false, Handcap: false, Scholarship: false,
+    appointmentDate: ''
   });
   const [loading, setLoading] = useState(false);
   const [successData, setSuccessData] = useState(null);
@@ -329,10 +478,12 @@ export default function Dashboard() {
     setSyncing(true);
     try {
       const data = await queueService.getQueue();
-      const active = Array.isArray(data) ? data.filter(p => !['done', 'no-show'].includes(p.status)) : [];
-      const completed = Array.isArray(data) ? data.filter(p => ['done', 'no-show'].includes(p.status)) : [];
+      const active     = Array.isArray(data) ? data.filter(p => !['done', 'no-show', 'rescheduled'].includes(p.status)) : [];
+      const completed  = Array.isArray(data) ? data.filter(p => ['done', 'no-show'].includes(p.status)) : [];
+      const rescheduled = Array.isArray(data) ? data.filter(p => p.status === 'rescheduled') : [];
       setQueue(active);
       setCompletedPatients(completed);
+      setRescheduledPatients(rescheduled);
       setLastSync(new Date());
     } finally {
       setSyncing(false);
@@ -358,6 +509,18 @@ export default function Dashboard() {
       if (type === 'start') await queueService.start(id);
       else if (type === 'end') await queueService.end(id);
       else if (type === 'noshow') await queueService.noShow(id);
+      else if (type === 'reschedule') {
+        // Search all three patient lists — active queue, completed, AND already-rescheduled
+        const found =
+          queue.find(p => String(p.id || p._id) === String(id)) ||
+          completedPatients.find(p => String(p.id || p._id) === String(id)) ||
+          rescheduledPatients.find(p => String(p.id || p._id) === String(id));
+        if (found) {
+          setRescheduleModal(found);
+          setRescheduleError('');
+        }
+        return; // Don't fetchQueue here — wait for modal submission
+      }
       else if (type === 'sms') {
         setSendingSms(prev => new Set(prev).add(id));
         await queueService.triggerSms(id, 'urgent');
@@ -368,14 +531,37 @@ export default function Dashboard() {
         });
       }
       await fetchQueue();
-    } catch (err) { 
+    } catch (err) {
       const errMsg = err.response?.data?.details || err.response?.data?.error || 'Backend action failed.';
-      alert(`Action Failed: ${errMsg}`); 
+      alert(`Action Failed: ${errMsg}`);
       setSendingSms(prev => {
         const next = new Set(prev);
         next.delete(id);
         return next;
       });
+    }
+  };
+
+  const handleReschedule = async (id, newDate, reason) => {
+    setRescheduling(true);
+    setRescheduleError('');
+    try {
+      const res = await queueService.reschedule(id, new Date(newDate).toISOString(), reason);
+      // If the patient being rescheduled is the one the patient-user just booked,
+      // update successData so their portal view reflects the new date immediately
+      const updatedPatient = res?.data?.patient;
+      if (updatedPatient && successData) {
+        const bookedId = String(successData.id || successData._id);
+        const reschId  = String(updatedPatient._id || updatedPatient.id);
+        if (bookedId === reschId) setSuccessData(updatedPatient);
+      }
+      setRescheduleModal(null);
+      await fetchQueue();
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Rescheduling failed. Please try again.';
+      setRescheduleError(msg);
+    } finally {
+      setRescheduling(false);
     }
   };
 
@@ -407,11 +593,12 @@ export default function Dashboard() {
   const waitingQueue = queue.filter(p => p.status !== 'in-progress');
 
   const queueStats = {
-    waiting: queue.filter(p => p.status === 'waiting').length,
-    arrived: queue.filter(p => p.status === 'arrived').length,
+    waiting:    queue.filter(p => p.status === 'waiting').length,
+    arrived:    queue.filter(p => p.status === 'arrived').length,
     inProgress: queue.filter(p => p.status === 'in-progress').length,
-    done: completedPatients.filter(p => p.status === 'done').length,
-    noshow: completedPatients.filter(p => p.status === 'no-show').length,
+    done:       completedPatients.filter(p => p.status === 'done').length,
+    noshow:     completedPatients.filter(p => p.status === 'no-show').length,
+    rescheduled: rescheduledPatients.length,
   };
 
   const totalToday = queue.length + completedPatients.length;
@@ -432,6 +619,17 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-darkBg text-white">
+
+      {/* ── RESCHEDULE MODAL ── */}
+      {rescheduleModal && (
+        <RescheduleModal
+          patient={rescheduleModal}
+          onClose={() => { setRescheduleModal(null); setRescheduleError(''); }}
+          onSubmit={handleReschedule}
+          loading={rescheduling}
+          error={rescheduleError}
+        />
+      )}
 
       {/* ── BACKGROUND ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -623,10 +821,84 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
+
+                {/* ── Upcoming Rescheduled Patients Panel ── */}
+                {rescheduledPatients.length > 0 && (
+                  <div>
+                    <button
+                      onClick={() => setShowRescheduledPanel(v => !v)}
+                      className="flex items-center justify-between w-full mb-3 group"
+                    >
+                      <div className="flex items-center gap-2">
+                        <CalendarClock className="w-4 h-4 text-yellow-400" />
+                        <p className="section-label mb-0 text-yellow-500">Upcoming Rescheduled ({rescheduledPatients.length})</p>
+                      </div>
+                      <ChevronDown
+                        className={`w-4 h-4 text-slate-600 transition-transform ${showRescheduledPanel ? '' : '-rotate-90'}`}
+                      />
+                    </button>
+                    {showRescheduledPanel && (
+                      <div className="glass-card overflow-hidden" style={{ border: '1px solid rgba(245,158,11,0.2)' }}>
+                        <div className="px-4 py-2 flex items-center gap-4 border-b" style={{ borderColor: 'rgba(245,158,11,0.1)' }}>
+                          <span className="text-[10px] text-slate-600 uppercase tracking-widest flex-1">Patient</span>
+                          <span className="text-[10px] text-slate-600 uppercase tracking-widest">Rescheduled To</span>
+                          <span className="text-[10px] text-slate-600 uppercase tracking-widest w-12 text-right">Attempts</span>
+                          <span className="text-[10px] text-slate-600 uppercase tracking-widest w-12 text-right">Risk</span>
+                        </div>
+                        {rescheduledPatients.map(p => {
+                          const risk = getRisk(p.noShowProb || 0);
+                          return (
+                            <div key={p.id || p._id}
+                                 className="flex items-center gap-4 px-4 py-3 hover:bg-white/[0.02] transition-colors"
+                                 style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0"
+                                   style={{ background: 'rgba(245,158,11,0.15)', color: '#fbbf24' }}>
+                                {(p.name || 'P')[0]}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-slate-300 truncate">{p.name}</p>
+                                <p className="text-xs text-slate-600">{p.phone || 'No phone'}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs font-bold text-yellow-400">{fmtDate(p.rescheduledDate)}</p>
+                                {p.rescheduleReason && (
+                                  <p className="text-[10px] text-slate-600 truncate max-w-[120px]">{p.rescheduleReason}</p>
+                                )}
+                              </div>
+                              <span className="text-xs font-black text-slate-500 w-12 text-right">{p.rescheduleCount || 1}/3</span>
+                              <span className="text-xs font-bold w-12 text-right" style={{ color: risk.color }}>
+                                {((p.noShowProb || 0) * 100).toFixed(0)}%
+                              </span>
+                              <button
+                                onClick={() => executeAction(p.id || p._id, 'reschedule')}
+                                className="btn-warning text-[10px] px-2 py-1 flex-shrink-0"
+                                title="Reschedule again"
+                              >
+                                <CalendarClock className="w-3 h-3" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* ── RIGHT: Sidebar ── */}
               <div className="xl:col-span-4 space-y-6">
+
+                {/* Reschedule Quick Stats */}
+                {queueStats.rescheduled > 0 && (
+                  <div className="rounded-2xl p-5" style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CalendarClock className="w-4 h-4 text-yellow-400" />
+                      <span className="text-xs font-black uppercase tracking-widest text-yellow-400">Rescheduled</span>
+                    </div>
+                    <p className="text-3xl font-black text-white mb-1">{queueStats.rescheduled}</p>
+                    <p className="text-xs text-slate-500">patient{queueStats.rescheduled !== 1 ? 's' : ''} moved to future dates</p>
+                  </div>
+                )}
 
                 {/* Risk Legend */}
                 <div className="glass-card p-5">
@@ -739,32 +1011,70 @@ export default function Dashboard() {
               {successData ? (
                 /* Success Card */
                 <div className="glass-card p-8 text-center anim-fade-in">
+
+                  {/* Icon — green tick normally, yellow clock if rescheduled */}
                   <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 anim-glow"
-                       style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)' }}>
-                    <CheckCircle className="w-8 h-8 text-green-400" />
+                       style={{
+                         background: successData.status === 'rescheduled'
+                           ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)',
+                         border: successData.status === 'rescheduled'
+                           ? '1px solid rgba(245,158,11,0.35)' : '1px solid rgba(16,185,129,0.35)'
+                       }}>
+                    {successData.status === 'rescheduled'
+                      ? <CalendarClock className="w-8 h-8 text-yellow-400" />
+                      : <CheckCircle className="w-8 h-8 text-green-400" />}
                   </div>
-                  <h3 className="text-xl font-black text-white mb-1">Slot Confirmed!</h3>
-                  <p className="text-slate-500 text-sm mb-8">AI analysis complete. Your position is secured.</p>
 
-                  {/* Summary metrics */}
-                  <div className="space-y-3 mb-8">
-                    <div className="flex items-center justify-between px-4 py-3 rounded-xl"
-                         style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
-                      <span className="text-xs text-slate-400">Your Wait Time</span>
-                      <span className="text-xl font-black text-neonGlow">{Math.round(liveWaitTarget)}<span className="text-xs text-slate-500 ml-1">min</span></span>
+                  <h3 className="text-xl font-black text-white mb-1">
+                    {successData.status === 'rescheduled' ? 'Appointment Rescheduled!' : 'Slot Confirmed!'}
+                  </h3>
+                  <p className="text-slate-500 text-sm mb-6">
+                    {successData.status === 'rescheduled'
+                      ? 'Your appointment has been moved to a new date.'
+                      : 'AI analysis complete. Your position is secured.'}
+                  </p>
+
+                  {/* Rescheduled date banner */}
+                  {successData.status === 'rescheduled' && successData.rescheduledDate && (
+                    <div className="flex items-center justify-between px-4 py-3 rounded-xl mb-4"
+                         style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                      <span className="text-xs text-slate-400">New Appointment</span>
+                      <span className="text-sm font-black text-yellow-400">
+                        {fmtDate(successData.rescheduledDate)}
+                      </span>
                     </div>
-                    {patientPosition && (
-                      <div className="flex items-center justify-between px-4 py-3 rounded-xl"
-                           style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                        <span className="text-xs text-slate-400">Queue Position</span>
-                        <span className="text-xl font-black text-indigo-400">#{patientPosition}</span>
-                      </div>
-                    )}
-                  </div>
+                  )}
 
-                  <button onClick={() => setSuccessData(null)} className="btn-outline w-full text-sm">
-                    Book Another
-                  </button>
+                  {/* Summary metrics — only show for non-rescheduled */}
+                  {successData.status !== 'rescheduled' && (
+                    <div className="space-y-3 mb-6">
+                      <div className="flex items-center justify-between px-4 py-3 rounded-xl"
+                           style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
+                        <span className="text-xs text-slate-400">Your Wait Time</span>
+                        <span className="text-xl font-black text-neonGlow">{Math.round(liveWaitTarget)}<span className="text-xs text-slate-500 ml-1">min</span></span>
+                      </div>
+                      {patientPosition && (
+                        <div className="flex items-center justify-between px-4 py-3 rounded-xl"
+                             style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                          <span className="text-xs text-slate-400">Queue Position</span>
+                          <span className="text-xl font-black text-indigo-400">#{patientPosition}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Reschedule count indicator */}
+                  {(successData.rescheduleCount || 0) > 0 && (
+                    <p className="text-[10px] text-slate-600 mb-4 uppercase tracking-widest">
+                      Rescheduled {successData.rescheduleCount}/3 time{successData.rescheduleCount > 1 ? 's' : ''}
+                    </p>
+                  )}
+
+                  <div className="space-y-3">
+                    <button onClick={() => setSuccessData(null)} className="btn-outline w-full text-sm">
+                      Book Another
+                    </button>
+                  </div>
                 </div>
               ) : (
                 /* Booking Form */
@@ -791,6 +1101,21 @@ export default function Dashboard() {
                       <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Phone (+CountryCode...)</label>
                       <input type="text" required placeholder="+92 300 1234567" className="glass-input"
                         value={formData.phone} onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))} />
+                    </div>
+
+                    {/* Preferred appointment date/time (optional) */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                        Preferred Date &amp; Time <span className="text-slate-600 normal-case font-medium">(Optional)</span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        className="glass-input"
+                        min={new Date(Date.now() + 30 * 60000).toISOString().slice(0, 16)}
+                        max={new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 16)}
+                        value={formData.appointmentDate}
+                        onChange={e => setFormData(p => ({ ...p, appointmentDate: e.target.value }))}
+                      />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -929,6 +1254,23 @@ export default function Dashboard() {
                             <p className="text-[10px] text-slate-600">wait time</p>
                           </div>
                           <span className={`status-pill ${getStatusStyle(p.status)} flex-shrink-0`}>{p.status}</span>
+
+                          {/* Reschedule button — only on the patient's own row */}
+                          {patientInQueue && String(patientInQueue.id || patientInQueue._id) === String(p.id || p._id) &&
+                           p.status !== 'in-progress' && p.status !== 'done' &&
+                           (successData?.rescheduleCount || 0) < 3 && (
+                            <button
+                              onClick={() => {
+                                setRescheduleModal(patientInQueue);
+                                setRescheduleError('');
+                              }}
+                              className="btn-warning text-[10px] px-3 py-1.5 flex-shrink-0"
+                              title="Reschedule your appointment"
+                            >
+                              <CalendarClock className="w-3.5 h-3.5" />
+                              Reschedule
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>

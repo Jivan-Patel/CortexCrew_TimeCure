@@ -23,7 +23,7 @@ const patientSchema = new mongoose.Schema({
   // 🏥 Queue Tracking
   status: { 
     type: String, 
-    enum: ["waiting", "arrived", "in-progress", "done", "no-show"],
+    enum: ["waiting", "arrived", "in-progress", "done", "no-show", "rescheduled"],
     default: "waiting" 
   },
   type: {
@@ -36,7 +36,20 @@ const patientSchema = new mongoose.Schema({
   // Timestamps for performance analytics
   startTime: { type: Date },
   endTime: { type: Date },
-  actualTime: { type: Number }
+  actualTime: { type: Number },
+
+  // 📅 SCHEDULING & RESCHEDULING FIELDS
+  appointmentDate:  { type: Date, default: null },    // Original booked slot
+  rescheduledDate:  { type: Date, default: null },    // New slot after reschedule
+  rescheduleReason: { type: String, default: "" },    // Reason for reschedule
+  rescheduleCount:  { type: Number, default: 0 },     // Max 3 allowed
+  rescheduleHistory: [{                               // Full audit trail
+    previousDate:   { type: Date },
+    newDate:        { type: Date },
+    reason:         { type: String, default: "" },
+    rescheduledAt:  { type: Date, default: Date.now }
+  }]
+
 }, { timestamps: true });
 
 module.exports = mongoose.model("Patient", patientSchema);
