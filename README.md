@@ -42,9 +42,10 @@
 
 ```text
 CortexCrew_TimeCure/
-├── frontend/           # React + Vite application
+├── frontend_v2/        # React + Vite application
 ├── backend/            # Node.js + Express API
 ├── ml/                 # Python Flask ML Service & Models
+├── TimeCure-backend/   # Node.js + Express
 ├── assets/             # Branding and Documentation imagery
 └── README.md           # Project Documentation
 ```
@@ -90,8 +91,7 @@ npm run dev
 
 ## 🔐 Authentication & Roles
 - **Patient**: Book appointments, view live queue, and receive reminders.
-- **Receptionist**: Check-in patients, manage walk-ins, and trigger manual queue overrides.
-- **Doctor**: Start/End consultations, view patient history, and see real-time delay metrics.
+- **Doctor**: One Time SignUp, Start/End consultations, view patient history, and see real-time delay metrics.
 
 ---
 
@@ -104,5 +104,3 @@ npm run dev
 This project is licensed under the **ISC License**.
 
 ---
-
-<p align="center">Made with ❤️ by the Cortex Crew</p>
