@@ -1,110 +1,121 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import authAPI from '../api/auth';
+import { motion, AnimatePresence } from 'framer-motion';
+import Logo from '../components/Logo';
+import { useAuth } from '../hooks/useAuth';
+import { Eye, EyeOff, LogIn, UserPlus, Loader2 } from 'lucide-react';
 
-export const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+const fadeUp = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } } };
 
+export default function Login({ onSuccess }) {
+  const { login, register } = useAuth();
+  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setError('');
-
-    // Validation
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    setLoading(true);
+    setError(''); setLoading(true);
     try {
-      const response = await authAPI.login(formData.email, formData.password);
-
-      if (response.user) {
-        // Store user info if needed
-        localStorage.setItem('user', JSON.stringify(response.user));
+      if (mode === 'login') {
+        await login(form.email, form.password);
+      } else {
+        await register(form.username, form.email, form.password);
       }
-
-      // Redirect to dashboard
-      navigate('/dashboard');
+      onSuccess?.();
     } catch (err) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] p-5 font-sans">
-      <div className="bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] px-10 py-12 w-full max-w-[450px] animate-[slideIn_0.5s_ease-out]">
-        <h2 className="text-center text-[#333] mb-2.5 text-3xl font-semibold">Welcome Back</h2>
-        <p className="text-center text-[#666] mb-7 text-sm">Login to Your TimeCure Account</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: '1rem', position: 'relative' }}>
+      {/* Aurora bg decoration */}
+      <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse 70% 50% at 20% 30%, rgba(63,185,80,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 70%, rgba(248,81,73,0.05) 0%, transparent 60%)', pointerEvents: 'none', zIndex: 0 }} />
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block mb-2 text-[#333] font-semibold text-sm">Email Address</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              className="w-full px-4 py-3 border-2 border-[#e0e0e0] rounded-lg text-sm transition-colors box-border focus:outline-none focus:border-[#667eea] focus:ring-[3px] focus:ring-[#667eea]/10"
-            />
+      <motion.div variants={fadeUp} initial="hidden" animate="show"
+        style={{ width: '100%', maxWidth: 400, position: 'relative', zIndex: 1 }}>
+
+        {/* Logo & Brand */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <Logo size={36} />
+            <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em' }}>
+              <span style={{ color: 'var(--green)' }}>Time</span>
+              <span style={{ color: 'var(--red)' }}>Cure</span>
+            </span>
           </div>
-
-          <div className="mb-4">
-            <label className="block mb-2 text-[#333] font-semibold text-sm">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              className="w-full px-4 py-3 border-2 border-[#e0e0e0] rounded-lg text-sm transition-colors box-border focus:outline-none focus:border-[#667eea] focus:ring-[3px] focus:ring-[#667eea]/10"
-            />
-          </div>
-
-          {error && <div className="bg-[#fee] text-[#c33] px-4 py-3 rounded-lg mb-4 text-sm border-l-4 border-[#c33]">{error}</div>}
-
-          <button type="submit" className="w-full p-3 bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white border-none rounded-lg text-base font-semibold cursor-pointer transition-all mt-2.5 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(102,126,234,0.3)] disabled:opacity-70 disabled:cursor-not-allowed" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-
-        <div className="text-center my-5">
-          <Link to="/forgot-password" className="text-[#667eea] no-underline font-semibold transition-colors hover:text-[#764ba2] hover:underline">
-            Forgot Password?
-          </Link>
+          <p style={{ color: 'var(--text-sec)', fontSize: 13 }}>Smart Appointment Scheduling System</p>
         </div>
 
-        <p className="text-center mt-5 text-[#666] text-sm">
-          Don't have an account?{' '}
-          <Link to="/signup" className="text-[#667eea] no-underline font-semibold transition-colors hover:text-[#764ba2] hover:underline">
-            Sign Up
-          </Link>
-        </p>
-      </div>
-      <style>{`
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+        <div className="card" style={{ border: '1px solid var(--border)' }}>
+          {/* Mode tabs */}
+          <div style={{ display: 'flex', background: 'var(--surface2)', borderRadius: 10, padding: 3, marginBottom: '1.5rem' }}>
+            {['login', 'register'].map(m => (
+              <button key={m} onClick={() => { setMode(m); setError(''); }} style={{
+                flex: 1, padding: '8px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                border: 'none', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
+                background: mode === m ? 'var(--surface)' : 'transparent',
+                color: mode === m ? 'var(--text)' : 'var(--text-sec)',
+                boxShadow: mode === m ? '0 1px 4px rgba(0,0,0,0.2)' : 'none',
+              }}>
+                {m === 'login' ? 'Sign In' : 'Register'}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <AnimatePresence>
+              {mode === 'register' && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
+                  <label className="label-caps" style={{ display: 'block', marginBottom: 6 }}>Full Name</label>
+                  <input className="input" placeholder="Your name" value={form.username} onChange={set('username')} required={mode === 'register'} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div>
+              <label className="label-caps" style={{ display: 'block', marginBottom: 6 }}>Email</label>
+              <input className="input" type="email" placeholder="email@example.com" value={form.email} onChange={set('email')} required autoComplete="email" />
+            </div>
+
+            <div>
+              <label className="label-caps" style={{ display: 'block', marginBottom: 6 }}>Password</label>
+              <div style={{ position: 'relative' }}>
+                <input className="input" type={showPw ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={set('password')} required minLength={6} style={{ paddingRight: 40 }} />
+                <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-sec)', padding: 2 }}>
+                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {error && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  style={{ padding: '10px 12px', background: 'var(--red-dim)', border: '1px solid rgba(248,81,73,0.3)', borderRadius: 8, fontSize: 13, color: 'var(--red)' }}>
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <button type="submit" className="btn btn-green" disabled={loading} style={{ justifyContent: 'center', padding: '11px', fontSize: 14, marginTop: 4, opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
+              {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : mode === 'login' ? <><LogIn size={15} /> Sign In</> : <><UserPlus size={15} /> Create Account</>}
+            </button>
+          </form>
+
+          {/* Demo hint */}
+          <div style={{ marginTop: '1.25rem', padding: '0.75rem', background: 'var(--surface2)', borderRadius: 8, fontSize: 12, color: 'var(--text-sec)', lineHeight: 1.5 }}>
+            <strong style={{ color: 'var(--text)' }}>Backend offline?</strong> The dashboard works with mock data — just click <span style={{ color: 'var(--green)', fontWeight: 700, cursor: 'pointer' }} onClick={() => onSuccess?.()}>Continue without login →</span>
+          </div>
+        </div>
+      </motion.div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
-};
+}
