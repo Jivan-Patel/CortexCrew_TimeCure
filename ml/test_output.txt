@@ -1,0 +1,25 @@
+﻿python : Traceback (most recent 
+call last):
+At line:1 char:32
++ $env:PYTHONIOENCODING="utf-8"; 
+python -c "
++                                
+~~~~~~~~~~~
+    + CategoryInfo          : Not 
+   Specified: (Traceback (most r  
+  ecent call last)::String) [],   
+  RemoteException
+    + FullyQualifiedErrorId : Nat 
+   iveCommandError
+ 
+  File "<string>", line 4, in 
+<module>
+    
+exec(open('ml/run_full_test.py', 
+encoding='utf-8').read())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 9, in 
+<module>
+NameError: name '__file__' is not 
+defined. Did you mean: '__name__'?

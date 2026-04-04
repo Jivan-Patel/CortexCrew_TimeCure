@@ -12,17 +12,11 @@ np.random.seed(42)
 # Column names from the CSV:
 # PatientId, AppointmentID, Gender, ScheduledDay, AppointmentDay, Age, Neighbourhood, Scholarship, Hipertension, Diabetes, Alcoholism, Handcap, SMS_received, No-show
 
-<<<<<<< theme-refactor
-# Define features used by both models
-FEATURES_TIME = ['Age', 'Gender', 'Hipertension', 'Diabetes', 'Alcoholism', 'Handcap', 'Scholarship']
-FEATURES_NO_SHOW = FEATURES_TIME + ['SMS_received']
-=======
 # Features for No-Show model — SMS_received is a strong predictor of whether patient shows up
 FEATURES_NOSHOW = ['Age', 'Gender', 'Hipertension', 'Diabetes', 'Alcoholism', 'Handcap', 'Scholarship', 'SMS_received']
 
 # Features for Time model — SMS has no effect on consultation duration
 FEATURES_TIME   = ['Age', 'Gender', 'Hipertension', 'Diabetes', 'Alcoholism', 'Handcap', 'Scholarship']
->>>>>>> main
 
 def main():
     # Load the dataset
@@ -51,15 +45,9 @@ def main():
     # README asks for 0 -> No-show, 1 -> Show.
     df['Target_Show'] = df['No-show'].map({'No': 1, 'Yes': 0})
 
-<<<<<<< theme-refactor
-    # Train No-Show Model
-    print("Training No-Show Classification Model...")
-    X_s = df[FEATURES_NO_SHOW]
-=======
     # Train No-Show Model (with SMS_received)
     print("Training No-Show Classification Model (with SMS_received)...")
     X_s = df[FEATURES_NOSHOW]
->>>>>>> main
     y_s = df['Target_Show']
     X_train_s, X_test_s, y_train_s, y_test_s = train_test_split(X_s, y_s, test_size=0.2, random_state=42)
     model_no_show = RandomForestClassifier(n_estimators=100, random_state=42)
