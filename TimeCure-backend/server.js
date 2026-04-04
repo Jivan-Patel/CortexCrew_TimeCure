@@ -61,10 +61,10 @@ async function sendSmsReminder(patient, type) {
             to: patient.phone
         });
         console.log(`💬 SMS Sent to ${patient.phone} (SID: ${twilioResponse.sid})`);
-        return true;
+        return { success: true };
     } catch (error) {
         console.error(`❌ Failed to send SMS to ${patient.phone}:`, error.message);
-        return false;
+        return { success: false, error: error.message };
     }
 }
 
@@ -208,9 +208,9 @@ cron.schedule('*/5 * * * *', async () => {
     for (let p of patients) {
         console.log(`📩 Triggering automated SMS for DB Patient ID ${p._id} (${p.smsStrategy})`);
         
-        const success = await sendSmsReminder(p, "normal");
+        const smsResult = await sendSmsReminder(p, "normal");
         
-        if (success) {
+        if (smsResult.success) {
             p.SMS_received = 1;
             
             // Re-fetch ML probability dynamically now that SMS was sent
@@ -241,9 +241,9 @@ app.post("/trigger-sms/:id", async (req, res) => {
     if (!p.phone) return res.status(400).json({ error: "Patient has no phone number on record." });
 
     const type = req.body?.type || "normal"; 
-    const success = await sendSmsReminder(p, type);
+    const smsResult = await sendSmsReminder(p, type);
     
-    if (success) {
+    if (smsResult.success) {
         p.SMS_received = 1;
         const dataPayload = {
              Age: p.Age, Gender: p.Gender, Hipertension: p.Hipertension,
@@ -256,7 +256,8 @@ app.post("/trigger-sms/:id", async (req, res) => {
 
         res.json({ message: "SMS triggered via Twilio successfully and Probability Updated in MongoDB", updatedPatient: { id: p._id, ...p.toObject() } });
     } else {
-        res.status(500).json({ error: "Failed. Check Twilio credentials." });
+        console.error("SMS Failed Details:", smsResult.error);
+        res.status(500).json({ error: "Failed to send SMS.", details: smsResult.error });
     }
 });
 

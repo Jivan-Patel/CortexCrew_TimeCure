@@ -161,10 +161,11 @@ function ActiveConsultationCard({ patient, onEnd }) {
 }
 
 // ─── PATIENT QUEUE CARD ────────────────────────────────────────────────────────
-function PatientCard({ patient, queueIndex, onAction, isDoc }) {
+function PatientCard({ patient, queueIndex, onAction, isDoc, sendingSms }) {
   const risk = getRisk(patient.noShowProb || 0);
   const insight = getInsight(patient.noShowProb || 0);
   const InsightIcon = insight.icon;
+  const wasSmsSent = patient.SMS_received === 1;
 
   return (
     <div className="glass-card p-5 transition-all duration-300 hover:scale-[1.01] group anim-fade-up"
@@ -235,12 +236,34 @@ function PatientCard({ patient, queueIndex, onAction, isDoc }) {
                 </>
               )}
               {patient.status === 'in-progress' && (
-                <button onClick={() => onAction(patient.id, 'end')} className="btn-danger w-full">
+                <button onClick={() => onAction(patient.id || patient._id, 'end')} className="btn-danger w-full">
                   <FastForward className="w-3.5 h-3.5" />
                   End Consultation
                 </button>
               )}
             </div>
+          )}
+        </div>
+
+        {/* SMS Status / Trigger (Right Side) */}
+        <div className="flex flex-col items-end gap-2 ml-2">
+          <button 
+            onClick={() => !wasSmsSent && onAction(patient.id || patient._id, 'sms')}
+            disabled={wasSmsSent || sendingSms.has(patient.id || patient._id)}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+              wasSmsSent 
+                ? 'bg-green-500/20 border-green-500/30 text-green-400' 
+                : sendingSms.has(patient.id || patient._id)
+                  ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-500 animate-pulse'
+                  : 'bg-white/5 border-white/10 text-slate-500 hover:text-neonGlow hover:bg-white/10'
+            }`}
+            style={{ border: '1px solid' }}
+            title={wasSmsSent ? "SMS Sent Successfully" : "Send SMS Reminder"}
+          >
+            {wasSmsSent ? <Check className="w-5 h-5" /> : sendingSms.has(patient.id || patient._id) ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Bell className="w-5 h-5" />}
+          </button>
+          {wasSmsSent && (
+            <span className="text-[8px] font-black uppercase text-green-500 tracking-tighter">Verified</span>
           )}
         </div>
       </div>
@@ -282,6 +305,8 @@ export default function Dashboard() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [lastSync, setLastSync] = useState(new Date());
   const [syncing, setSyncing] = useState(false);
+  const [sendingSms, setSendingSms] = useState(new Set()); // Track IDs currently sending
+  const sentThisSession = React.useRef(new Set()); // Avoid duplicates in current session
 
   // Patient form state
   const [formData, setFormData] = useState({
@@ -333,10 +358,46 @@ export default function Dashboard() {
       if (type === 'start') await queueService.start(id);
       else if (type === 'end') await queueService.end(id);
       else if (type === 'noshow') await queueService.noShow(id);
-      // late = mark as arrived / requeue (depends on backend)
+      else if (type === 'sms') {
+        setSendingSms(prev => new Set(prev).add(id));
+        await queueService.triggerSms(id, 'urgent');
+        setSendingSms(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }
       await fetchQueue();
-    } catch { alert('Backend action failed.'); }
+    } catch (err) { 
+      const errMsg = err.response?.data?.details || err.response?.data?.error || 'Backend action failed.';
+      alert(`Action Failed: ${errMsg}`); 
+      setSendingSms(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
   };
+
+  // --- AUTOMATIC SMS LOGIC ---
+  useEffect(() => {
+    if (queue.length === 0) return;
+
+    const highRiskToNotify = queue.filter(p => 
+      p.noShowProb > 0.4 && 
+      p.SMS_received === 0 && 
+      !sendingSms.has(p.id || p._id) &&
+      !sentThisSession.current.has(p.id || p._id) &&
+      ['waiting', 'arrived'].includes(p.status)
+    );
+
+    highRiskToNotify.forEach(p => {
+      const pid = p.id || p._id;
+      sentThisSession.current.add(pid); // Mark as sent for this session immediately
+      console.log(`🚀 Triggering automatic SMS for high-risk patient: ${p.name}`);
+      executeAction(pid, 'sms');
+    });
+  }, [queue]);
 
   if (!user) return null;
   const isDoc = user.role === 'doctor';
@@ -540,6 +601,7 @@ export default function Dashboard() {
                           queueIndex={i}
                           onAction={executeAction}
                           isDoc={isDoc}
+                          sendingSms={sendingSms}
                         />
                       ))}
                     </div>

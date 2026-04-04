@@ -36,5 +36,6 @@ export const queueService = {
   },
   start: async (id) => axios.post(`${QUEUE_BASE_URL}/start/${id}`),
   end: async (id) => axios.post(`${QUEUE_BASE_URL}/end/${id}`),
-  noShow: async (id) => axios.post(`${QUEUE_BASE_URL}/no-show/${id}`)
+  noShow: async (id) => axios.post(`${QUEUE_BASE_URL}/no-show/${id}`),
+  triggerSms: async (id, type = 'normal') => axios.post(`${QUEUE_BASE_URL}/trigger-sms/${id}`, { type })
 };
