@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Mail, Lock, Loader2, Activity, ArrowRight, Eye, EyeOff, ChevronRight, Brain, Wifi, Bell, BarChart3 } from 'lucide-react';
 import { authService } from '../services/api';
+import { Helmet } from "react-helmet";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -29,6 +30,10 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-darkBg text-white flex overflow-hidden relative">
+      <Helmet>
+        <title>Home - TimeCure</title>
+        <meta name="description" content="Learn coding with CodingGita" />
+      </Helmet>
 
       {/* ── BACKGROUND AMBIENCE ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
