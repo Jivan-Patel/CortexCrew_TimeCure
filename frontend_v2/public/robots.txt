@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cortex-crew-time-cure.vercel.app/Sitemap.xml
+Sitemap: https://cortex-crew-time-cure.vercel.app/sitemap.xml
